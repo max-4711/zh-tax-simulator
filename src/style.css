@@ -495,16 +495,6 @@ button:focus-visible {
 }
 
 @media (min-width: 801px) {
-  .navigation-drawer[data-open='true'] ~ .app-content {
-    width: min(780px, calc(100% - 350px));
-    margin-left: 330px;
-  }
-
-  .navigation-drawer[data-open='true'] ~ .app-content,
-  .app-content {
-    transition: margin 180ms ease, width 180ms ease;
-  }
-
   .drawer-backdrop {
     display: none;
   }

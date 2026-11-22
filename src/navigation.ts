@@ -14,7 +14,6 @@ export class AppNavigation {
   private currentPage: AppPage = 'basisangaben';
   private complete = false;
   private notificationDismissed = false;
-  private notificationTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(private readonly root: HTMLElement) {
     this.drawer = this.getElement('#navigation-drawer');
@@ -104,27 +103,21 @@ export class AppNavigation {
     }
 
     this.hideNotification();
-    this.setDrawerOpen(false);
+
+    if (this.mobileQuery.matches) {
+      this.setDrawerOpen(false);
+    }
+
     this.root.querySelector<HTMLElement>(`#${page}-page h1`)?.focus();
   }
 
   private showNotification(): void {
-    if (this.notificationTimer !== undefined) {
-      clearTimeout(this.notificationTimer);
-    }
-
     this.notification.hidden = false;
-    this.notificationTimer = setTimeout(() => this.hideNotification(), 10000);
   }
 
   private hideNotification(): void {
     this.notificationDismissed = true;
     this.notification.hidden = true;
-
-    if (this.notificationTimer !== undefined) {
-      clearTimeout(this.notificationTimer);
-      this.notificationTimer = undefined;
-    }
   }
 
   private isDrawerOpen(): boolean {
