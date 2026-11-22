@@ -14,6 +14,7 @@ export class AppNavigation {
   private currentPage: AppPage = 'basisangaben';
   private complete = false;
   private notificationDismissed = false;
+  private onPageChange: (page: AppPage) => void = () => undefined;
 
   constructor(private readonly root: HTMLElement) {
     this.drawer = this.getElement('#navigation-drawer');
@@ -58,6 +59,10 @@ export class AppNavigation {
 
     this.mobileQuery.addEventListener('change', () => this.setDrawerOpen(!this.mobileQuery.matches));
     this.setDrawerOpen(!this.mobileQuery.matches);
+  }
+
+  setOnPageChange(onPageChange: (page: AppPage) => void): void {
+    this.onPageChange = onPageChange;
   }
 
   setComplete(complete: boolean): void {
@@ -109,6 +114,7 @@ export class AppNavigation {
     }
 
     this.root.querySelector<HTMLElement>(`#${page}-page h1`)?.focus();
+    this.onPageChange(page);
   }
 
   private showNotification(): void {

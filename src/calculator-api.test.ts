@@ -1,10 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  CALCULATOR_CALCULATION_URL,
   CALCULATOR_METADATA_URL,
+  calculateTaxes,
   fetchCalculatorMetadata,
   readAmountConfiguration,
   readChoiceConfiguration,
+  readTaxCalculationResult,
+  TAX_RESULT_FIELDS,
 } from './calculator-api';
+import { emptyBasicInputValues } from './basic-inputs-store';
 
 const metadata = {
   taxYear: {
@@ -64,5 +69,61 @@ describe('Metadaten des Steuerrechners', () => {
 
     await expect(fetchCalculatorMetadata()).rejects.toThrow('Status 503');
     fetchMock.mockRestore();
+  });
+});
+
+describe('Steuerberechnung', () => {
+  const calculationResponse = Object.fromEntries(
+    TAX_RESULT_FIELDS.map((field) => [
+      field,
+      { label: `Bezeichnung ${field}`, value: 12.5, currency: 'CHF' },
+    ]),
+  );
+
+  it('übermittelt alle Basisangaben im offiziellen Anfrageformat', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(calculationResponse), { status: 200 }),
+    );
+    const values = {
+      ...emptyBasicInputValues(2027),
+      maritalStatus: 'single',
+      taxScale: 'BASIC',
+      religionP1: 'OTHERS',
+      municipality: '14',
+      taxableIncome: '73000',
+      ascertainedTaxableIncome: '74000',
+      taxableAssets: '480000',
+      ascertainedTaxableAssets: '490000',
+    };
+
+    await calculateTaxes(values);
+
+    expect(fetchMock).toHaveBeenCalledWith(CALCULATOR_CALCULATION_URL, {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        taxYear: '2027',
+        maritalStatus: 'single',
+        taxScale: 'BASIC',
+        religionP1: 'OTHERS',
+        municipality: '14',
+        taxableIncome: 73000,
+        ascertainedTaxableIncome: 74000,
+        taxableAssets: 480000,
+        ascertainedTaxableAssets: 490000,
+      }),
+    });
+    fetchMock.mockRestore();
+  });
+
+  it('liest die offiziellen Bezeichnungen und die pauschale Personalsteuer', () => {
+    const result = readTaxCalculationResult({
+      ...calculationResponse,
+      personalTaxRate: { label: 'Personalsteuer, Steuerfuss', value: 'pauschal' },
+    });
+
+    expect(result.cantonalSimpleTax.label).toBe('Bezeichnung cantonalSimpleTax');
+    expect(result.personalTaxRate.value).toBe('pauschal');
+    expect(() => readTaxCalculationResult({})).toThrow('ascertainedTaxableIncome');
   });
 });

@@ -172,7 +172,16 @@ export function renderApp(): string {
         </section>
 
         <section id="basisrechnung-page" data-page="basisrechnung" aria-labelledby="calculation-title" hidden>
-          <h1 id="calculation-title" tabindex="-1">Basisrechnung</h1>
+          <div class="intro">
+            <p class="eyebrow">Basisszenario</p>
+            <h1 id="calculation-title" tabindex="-1">Basisrechnung</h1>
+            <p>Die Berechnung verwendet die aktuellen Basisangaben und den offiziellen Steuerrechner des Kantons Zürich.</p>
+          </div>
+          <div class="calculation-status-row">
+            <p id="tax-calculation-status" class="form-status" role="status" aria-live="polite"></p>
+            <button id="tax-calculation-retry" class="secondary-button" type="button" hidden>Erneut berechnen</button>
+          </div>
+          <div id="tax-calculation-results" hidden></div>
         </section>
       </main>
 

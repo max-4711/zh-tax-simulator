@@ -95,6 +95,10 @@ export class BasicInputsForm {
     this.notifyCompletionChange();
   }
 
+  getValues(): BasicInputValues {
+    return { ...this.values };
+  }
+
   showLoadingError(): void {
     const status = this.form.querySelector<HTMLElement>('#loading-status');
 

@@ -4,6 +4,7 @@ import { BasicInputsForm } from './basic-inputs-form';
 import { getBrowserStorage } from './basic-inputs-store';
 import { fetchCalculatorMetadata } from './calculator-api';
 import { AppNavigation } from './navigation';
+import { TaxCalculationPage } from './tax-calculation';
 
 const root = document.querySelector<HTMLElement>('#app');
 
@@ -26,6 +27,12 @@ const basicInputs = new BasicInputsForm(
   new Date().getFullYear(),
   (complete) => navigation.setComplete(complete),
 );
+const calculation = new TaxCalculationPage(root, () => basicInputs.getValues());
+navigation.setOnPageChange((page) => {
+  if (page === 'basisrechnung') {
+    void calculation.open();
+  }
+});
 
 async function loadChoices(): Promise<void> {
   try {
