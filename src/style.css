@@ -734,7 +734,8 @@ dl {
   min-height: 0;
 }
 
-.children-field {
+.children-field,
+.religion-p2-field {
   max-width: calc(50% - 10px);
   margin-top: 24px;
 }
@@ -1049,7 +1050,8 @@ dl {
     grid-column: auto;
   }
 
-  .children-field {
+  .children-field,
+  .religion-p2-field {
     max-width: none;
   }
 

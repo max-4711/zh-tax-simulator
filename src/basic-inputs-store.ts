@@ -5,6 +5,7 @@ export interface BasicInputValues {
   taxYear: string;
   taxScale: string;
   religionP1: string;
+  religionP2: string;
   municipality: string;
   childrenNo: string;
   taxableIncome: string;
@@ -24,6 +25,7 @@ const INPUT_KEYS = Object.keys({
   taxYear: '',
   taxScale: '',
   religionP1: '',
+  religionP2: '',
   municipality: '',
   childrenNo: '0',
   taxableIncome: '',
@@ -41,6 +43,7 @@ export function emptyBasicInputValues(currentYear: number): BasicInputValues {
     taxYear: String(currentYear),
     taxScale: '',
     religionP1: '',
+    religionP2: '',
     municipality: '',
     childrenNo: '0',
     taxableIncome: '',

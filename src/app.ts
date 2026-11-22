@@ -82,8 +82,19 @@ export function renderApp(): string {
             </div>
             <ul class="sub-navigation">
               <li>
-                <button class="sub-navigation-link" type="button" data-page-target="vergleich-1-zu-1">
+                <button
+                  id="vergleich-1-zu-1-navigation"
+                  class="sub-navigation-link"
+                  type="button"
+                  data-page-target="vergleich-1-zu-1"
+                  aria-describedby="navigation-lock-hint"
+                  disabled
+                >
                   <span>1:1 Vergleich</span>
+                  <svg class="lock-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="5" y="10" width="14" height="10" rx="2" />
+                    <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                  </svg>
                 </button>
               </li>
             </ul>
@@ -91,7 +102,7 @@ export function renderApp(): string {
         </ul>
       </nav>
       <p id="navigation-lock-hint" class="navigation-lock-hint">
-        Fülle zuerst alle Basisangaben aus, um die Basisrechnung freizuschalten.
+        Fülle zuerst alle Basisangaben aus, um die Basisrechnung und Vergleichsszenarien freizuschalten.
       </p>
     </aside>
 

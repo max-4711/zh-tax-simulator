@@ -29,6 +29,7 @@ describe('renderApp', () => {
 
     expect(page).toContain('Vergleichsszenarien');
     expect(page).toContain('data-page-target="vergleich-1-zu-1"');
+    expect(page).toMatch(/id="vergleich-1-zu-1-navigation"[\s\S]*?disabled/);
     expect(page).toContain('id="comparison-inputs"');
     expect(page).toContain('id="comparison-calculation-results"');
     expect(page).toContain('Diese Eingaben werden nicht gespeichert.');
@@ -39,6 +40,7 @@ describe('renderApp', () => {
     'taxYear',
     'taxScale',
     'religionP1',
+    'religionP2',
     'municipality',
     'childrenNo',
     'taxableIncome',

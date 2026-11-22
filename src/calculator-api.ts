@@ -27,6 +27,7 @@ export type ChoiceField =
   | 'taxYear'
   | 'taxScale'
   | 'religionP1'
+  | 'religionP2'
   | 'municipality';
 
 export type AmountField = 'taxableIncome' | 'taxableAssets';
@@ -92,6 +93,27 @@ export function readAmountConfiguration(
         : null,
     hasFractionDigits: configuration.hasFractionDigits === true,
   };
+}
+
+export async function fetchSecondReligionConfiguration(
+  taxYear: string,
+  maritalStatus: string,
+): Promise<ChoiceConfiguration | null> {
+  const response = await fetch(CALCULATOR_METADATA_URL, {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ taxYear, maritalStatus }),
+  });
+  if (!response.ok) {
+    throw new Error(`Der Steuerrechner antwortet mit Status ${response.status}.`);
+  }
+  const metadata: unknown = await response.json();
+  if (!isRecord(metadata)) {
+    throw new Error('Die Antwort des Steuerrechners ist ungültig.');
+  }
+  return metadata.religionP2 === null
+    ? null
+    : readChoiceConfiguration(metadata, 'religionP2');
 }
 
 export interface ChildrenConfiguration {
@@ -270,6 +292,7 @@ export async function calculateTaxes(
     maritalStatus: values.maritalStatus,
     taxScale: values.taxScale,
     religionP1: values.religionP1,
+    ...(values.religionP2 === '' ? {} : { religionP2: values.religionP2 }),
     municipality: values.municipality,
     taxableIncome: Number(values.ascertainedTaxableIncome),
     taxableAssets: Number(values.ascertainedTaxableAssets),

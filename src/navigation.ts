@@ -4,6 +4,7 @@ export class AppNavigation {
   private readonly drawer: HTMLElement;
   private readonly toggle: HTMLButtonElement;
   private readonly calculationLink: HTMLButtonElement;
+  private readonly comparisonLink: HTMLButtonElement;
   private readonly lockHint: HTMLElement;
   private readonly notification: HTMLElement;
   private readonly dismissNotification: HTMLButtonElement;
@@ -20,6 +21,7 @@ export class AppNavigation {
     this.drawer = this.getElement('#navigation-drawer');
     this.toggle = this.getElement('#navigation-toggle');
     this.calculationLink = this.getElement('#basisrechnung-navigation');
+    this.comparisonLink = this.getElement('#vergleich-1-zu-1-navigation');
     this.lockHint = this.getElement('#navigation-lock-hint');
     this.notification = this.getElement('#completion-notification');
     this.dismissNotification = this.getElement('#dismiss-completion');
@@ -72,11 +74,13 @@ export class AppNavigation {
   setComplete(complete: boolean): void {
     const newlyComplete = complete && !this.complete;
     this.complete = complete;
-    this.calculationLink.disabled = !complete;
-    if (complete) {
-      this.calculationLink.removeAttribute('aria-describedby');
-    } else {
-      this.calculationLink.setAttribute('aria-describedby', 'navigation-lock-hint');
+    for (const link of [this.calculationLink, this.comparisonLink]) {
+      link.disabled = !complete;
+      if (complete) {
+        link.removeAttribute('aria-describedby');
+      } else {
+        link.setAttribute('aria-describedby', 'navigation-lock-hint');
+      }
     }
     this.lockHint.hidden = complete;
 
@@ -84,7 +88,7 @@ export class AppNavigation {
       this.notificationDismissed = false;
       this.hideNotification();
 
-      if (this.currentPage === 'basisrechnung') {
+      if (this.currentPage !== 'basisangaben') {
         this.showPage('basisangaben');
       }
     } else if (newlyComplete && !this.notificationDismissed) {
@@ -93,7 +97,7 @@ export class AppNavigation {
   }
 
   private showPage(page: AppPage): void {
-    if (page === 'basisrechnung' && !this.complete) {
+    if (page !== 'basisangaben' && !this.complete) {
       return;
     }
 

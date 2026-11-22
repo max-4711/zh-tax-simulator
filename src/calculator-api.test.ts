@@ -10,6 +10,7 @@ import {
   federalTaxScale,
   fetchCalculatorMetadata,
   fetchChildrenConfiguration,
+  fetchSecondReligionConfiguration,
   readAmountConfiguration,
   readChoiceConfiguration,
   readChildrenConfiguration,
@@ -80,6 +81,42 @@ describe('Metadaten des Steuerrechners', () => {
   });
 });
 
+describe('Konfession Person 2', () => {
+  it('lädt Bezeichnung und Auswahlmöglichkeiten für den gewählten Zivilstand', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({
+        religionP2: {
+          label: 'Konfession Person 2',
+          options: [
+            { code: 'PLEASE_SELECT', value: 'Bitte wählen' },
+            { code: 'REFORMED', value: 'evangelisch' },
+          ],
+        },
+      }), { status: 200 }),
+    );
+
+    await expect(fetchSecondReligionConfiguration('2027', 'partnered')).resolves.toEqual({
+      label: 'Konfession Person 2',
+      options: [{ code: 'REFORMED', label: 'evangelisch' }],
+    });
+    expect(fetchMock).toHaveBeenCalledWith(CALCULATOR_METADATA_URL, {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ taxYear: '2027', maritalStatus: 'partnered' }),
+    });
+    fetchMock.mockRestore();
+  });
+
+  it('meldet eine nicht anwendbare zweite Konfession', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ religionP2: null }), { status: 200 }),
+    );
+
+    await expect(fetchSecondReligionConfiguration('2027', 'single')).resolves.toBeNull();
+    fetchMock.mockRestore();
+  });
+});
+
 describe('Steuerberechnung', () => {
   const calculationResponse = Object.fromEntries(
     TAX_RESULT_FIELDS.map((field) => [
@@ -97,6 +134,7 @@ describe('Steuerberechnung', () => {
       maritalStatus: 'single',
       taxScale: 'BASIC',
       religionP1: 'OTHERS',
+      religionP2: 'REFORMED',
       municipality: '14',
       taxableIncome: '73000',
       ascertainedTaxableIncome: '74000',
@@ -114,6 +152,7 @@ describe('Steuerberechnung', () => {
         maritalStatus: 'single',
         taxScale: 'BASIC',
         religionP1: 'OTHERS',
+        religionP2: 'REFORMED',
         municipality: '14',
         taxableIncome: 74000,
         taxableAssets: 490000,

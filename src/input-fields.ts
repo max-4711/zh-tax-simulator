@@ -68,6 +68,14 @@ export function renderInputFields(storageNote: string, statusId: string, idPrefi
       ${CHOICE_FIELDS.map((field) => renderChoiceField(field, idPrefix)).join('')}
     </div>
 
+    <div id="${idPrefix}religion-p2-field" class="field religion-p2-field" hidden>
+      <label for="${idPrefix}religionP2"></label>
+      <select id="${idPrefix}religionP2" name="religionP2" required disabled>
+        <option value="">Bitte wählen</option>
+      </select>
+      <p id="${idPrefix}religion-p2-status" class="field-hint" role="status"></p>
+    </div>
+
     <div id="${idPrefix}children-no-field" class="field children-field" hidden>
       <label for="${idPrefix}childrenNo"></label>
       <input id="${idPrefix}childrenNo" name="childrenNo" type="number" inputmode="numeric" min="0" step="1" value="0" required disabled />

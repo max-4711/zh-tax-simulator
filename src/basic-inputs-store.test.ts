@@ -17,6 +17,7 @@ describe('lokal gespeicherte Grundangaben', () => {
       taxYear: '2026',
       taxScale: '',
       religionP1: '',
+      religionP2: '',
       municipality: '',
       childrenNo: '0',
       taxableIncome: '',

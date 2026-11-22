@@ -1,6 +1,7 @@
 import { AMOUNT_FIELDS, CHOICE_FIELDS, type InputField } from './input-fields';
 import {
   fetchChildrenConfiguration,
+  fetchSecondReligionConfiguration,
   readAmountConfiguration,
   readChoiceConfiguration,
   type ChildrenConfiguration,
@@ -43,6 +44,8 @@ export class BasicInputsForm {
   private readonly currentYear: number;
   private childrenConfiguration: ChildrenConfiguration | undefined;
   private childrenRequestNumber = 0;
+  private secondReligionApplicable: boolean | undefined;
+  private secondReligionRequestNumber = 0;
 
   constructor(
     private readonly form: HTMLFormElement,
@@ -107,6 +110,7 @@ export class BasicInputsForm {
     this.save();
     this.notifyCompletionChange();
     void this.updateChildrenConfiguration();
+    void this.updateSecondReligionConfiguration();
   }
 
   getValues(): BasicInputValues {
@@ -189,6 +193,7 @@ export class BasicInputsForm {
   private bindEvents(): void {
     for (const field of [
       ...CHOICE_FIELDS,
+      'religionP2',
       ...AMOUNT_FIELDS,
       'childrenNo',
       'federalTaxableIncome',
@@ -242,6 +247,9 @@ export class BasicInputsForm {
     if (field === 'taxYear' || field === 'taxScale') {
       void this.updateChildrenConfiguration();
     }
+    if (field === 'taxYear' || field === 'maritalStatus') {
+      void this.updateSecondReligionConfiguration();
+    }
   }
 
   private toggleFederalIncome(): void {
@@ -265,6 +273,56 @@ export class BasicInputsForm {
       this.values.federalAscertainedTaxableIncome;
     this.updateFederalIncomeVisibility();
     this.save();
+    this.notifyCompletionChange();
+  }
+
+  private async updateSecondReligionConfiguration(): Promise<void> {
+    const requestNumber = ++this.secondReligionRequestNumber;
+    const field = this.form.querySelector<HTMLElement>('.religion-p2-field');
+    const select = this.getControl<HTMLSelectElement>('religionP2');
+    const status = this.form.querySelector<HTMLElement>('.religion-p2-field .field-hint');
+    if (field === null || status === null) {
+      throw new Error('Das Auswahlfeld für Konfession Person 2 fehlt.');
+    }
+
+    this.secondReligionApplicable = undefined;
+    field.hidden = false;
+    select.disabled = true;
+    status.textContent = 'Angaben zur Konfession werden geladen …';
+    this.notifyCompletionChange();
+
+    try {
+      const configuration = await fetchSecondReligionConfiguration(
+        this.values.taxYear,
+        this.values.maritalStatus,
+      );
+      if (requestNumber !== this.secondReligionRequestNumber) {
+        return;
+      }
+      this.secondReligionApplicable = configuration !== null;
+      field.hidden = configuration === null;
+      select.disabled = configuration === null;
+      status.textContent = '';
+      if (configuration !== null) {
+        this.setLabel('religionP2', configuration.label);
+        select.replaceChildren(new Option('Bitte wählen', ''));
+        for (const option of configuration.options) {
+          select.add(new Option(option.label, option.code));
+        }
+        if (!configuration.options.some((option) => option.code === this.values.religionP2)) {
+          this.values.religionP2 = '';
+          this.save();
+        }
+        select.value = this.values.religionP2;
+      }
+    } catch {
+      if (requestNumber !== this.secondReligionRequestNumber) {
+        return;
+      }
+      status.textContent =
+        'Die Angaben zur Konfession konnten nicht geladen werden. Bitte Steuerjahr oder Zivilstand erneut auswählen.';
+      status.dataset.state = 'error';
+    }
     this.notifyCompletionChange();
   }
 
@@ -324,8 +382,14 @@ export class BasicInputsForm {
         const input = this.getControl<HTMLInputElement>(field);
         return input.value.trim() !== '' && input.checkValidity();
       });
+    const secondReligionInput = this.getControl<HTMLSelectElement>('religionP2');
+    const secondReligionComplete =
+      this.secondReligionApplicable !== undefined &&
+      (!this.secondReligionApplicable ||
+        (!secondReligionInput.disabled && secondReligionInput.checkValidity()));
     const complete =
       this.form.getAttribute('aria-busy') === 'false' &&
+      secondReligionComplete &&
       childrenComplete &&
       federalComplete &&
       controls.every(
