@@ -16,34 +16,230 @@ body {
 }
 
 input,
-select {
+select,
+button {
   font: inherit;
 }
 
+button {
+  color: inherit;
+}
+
+[hidden] {
+  display: none !important;
+}
+
 #app {
-  display: flex;
-  flex-direction: column;
-  width: min(780px, calc(100% - 40px));
   min-height: 100vh;
-  margin: 0 auto;
 }
 
 .site-header {
+  position: relative;
+  z-index: 30;
+  border-bottom: 1px solid #deded6;
+  background: #f6f5f0;
+  font-size: 0.85rem;
+}
+
+.header-inner {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 24px 0;
-  border-bottom: 1px solid #deded6;
-  font-size: 0.85rem;
+  width: min(1180px, calc(100% - 40px));
+  min-height: 72px;
+  margin: 0 auto;
+}
+
+.header-start {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
 }
 
 .location {
   color: #73776e;
 }
 
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 9px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  background: #e8eae2;
+}
+
+.icon-button svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.menu-button {
+  margin-left: -9px;
+}
+
+.navigation-drawer {
+  position: fixed;
+  z-index: 40;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(310px, calc(100% - 44px));
+  padding: 20px 16px 24px;
+  overflow-y: auto;
+  border-right: 1px solid #d9ddd2;
+  background: #fbfaf5;
+  box-shadow: 8px 0 28px rgb(38 47 35 / 10%);
+  transform: translateX(-105%);
+  visibility: hidden;
+  transition: transform 180ms ease, visibility 180ms;
+}
+
+.navigation-drawer[data-open='true'] {
+  transform: translateX(0);
+  visibility: visible;
+}
+
+.navigation-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+  margin: 0 4px 26px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.scenario-navigation ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.scenario-label {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 12px;
+  font-weight: 600;
+}
+
+.scenario-label svg,
+.lock-icon {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.sub-navigation {
+  margin: 5px 0 0 21px !important;
+  padding-left: 15px !important;
+  border-left: 1px solid #d7dcd0;
+}
+
+.sub-navigation-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  margin: 3px 0;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sub-navigation-link:hover:not(:disabled) {
+  background: #ecefe6;
+}
+
+.sub-navigation-link[aria-current='page'] {
+  color: #38573c;
+  background: #e4eade;
+  font-weight: 600;
+}
+
+.sub-navigation-link:disabled {
+  color: #858a80;
+  cursor: not-allowed;
+}
+
+.lock-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.sub-navigation-link:not(:disabled) .lock-icon {
+  display: none;
+}
+
+.navigation-lock-hint {
+  margin: 22px 12px 0 48px;
+  color: #73776e;
+  font-size: 0.78rem;
+  line-height: 1.55;
+}
+
+.drawer-backdrop {
+  position: fixed;
+  z-index: 35;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: rgb(30 35 28 / 35%);
+}
+
+.app-content {
+  display: flex;
+  flex-direction: column;
+  width: min(780px, calc(100% - 40px));
+  min-height: calc(100vh - 73px);
+  margin: 0 auto;
+}
+
 main {
   flex: 1;
   padding: 48px 0 64px;
+}
+
+.eyebrow {
+  margin: 0 0 8px !important;
+  color: #526e56 !important;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1:focus {
+  outline: none;
 }
 
 h1 {
@@ -207,9 +403,127 @@ footer p {
   margin: 0;
 }
 
+.completion-notification {
+  position: fixed;
+  z-index: 50;
+  right: 24px;
+  bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100% - 32px);
+  padding: 12px;
+  border: 1px solid #cdd9c7;
+  border-radius: 10px;
+  background: #fcfff9;
+  box-shadow: 0 8px 30px rgb(31 48 29 / 16%);
+  animation: notification-in 180ms ease-out;
+}
+
+.completion-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #38573c;
+  background: #e3edde;
+}
+
+.completion-check svg {
+  width: 21px;
+  height: 21px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.completion-link {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 2px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.completion-link strong {
+  color: #354c37;
+  font-size: 0.9rem;
+}
+
+.completion-link > span {
+  color: #526e56;
+  font-size: 0.8rem;
+}
+
+.completion-link:hover > span {
+  text-decoration: underline;
+}
+
+#dismiss-completion {
+  width: 34px;
+  height: 34px;
+  margin-left: 4px;
+  color: #73776e;
+}
+
+button:focus-visible {
+  outline: 3px solid rgb(68 102 74 / 24%);
+  outline-offset: 2px;
+}
+
+@keyframes notification-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .navigation-drawer,
+  .completion-notification {
+    transition: none;
+    animation: none;
+  }
+}
+
+@media (min-width: 801px) {
+  .navigation-drawer[data-open='true'] ~ .app-content {
+    width: min(780px, calc(100% - 350px));
+    margin-left: 330px;
+  }
+
+  .navigation-drawer[data-open='true'] ~ .app-content,
+  .app-content {
+    transition: margin 180ms ease, width 180ms ease;
+  }
+
+  .drawer-backdrop {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  .navigation-drawer {
+    padding-top: 16px;
+  }
+}
+
 @media (max-width: 600px) {
-  #app {
-    width: min(100% - 28px, 780px);
+  .header-inner,
+  .app-content {
+    width: calc(100% - 28px);
+  }
+
+  .location {
+    display: none;
   }
 
   main {

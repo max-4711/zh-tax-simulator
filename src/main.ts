@@ -3,6 +3,7 @@ import { renderApp } from './app';
 import { BasicInputsForm } from './basic-inputs-form';
 import { getBrowserStorage } from './basic-inputs-store';
 import { fetchCalculatorMetadata } from './calculator-api';
+import { AppNavigation } from './navigation';
 
 const root = document.querySelector<HTMLElement>('#app');
 
@@ -18,7 +19,13 @@ if (form === null) {
   throw new Error('Das Eingabeformular wurde nicht gefunden.');
 }
 
-const basicInputs = new BasicInputsForm(form, getBrowserStorage());
+const navigation = new AppNavigation(root);
+const basicInputs = new BasicInputsForm(
+  form,
+  getBrowserStorage(),
+  new Date().getFullYear(),
+  (complete) => navigation.setComplete(complete),
+);
 
 async function loadChoices(): Promise<void> {
   try {

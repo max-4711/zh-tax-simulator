@@ -37,6 +37,7 @@ export class BasicInputsForm {
     private readonly form: HTMLFormElement,
     private readonly storage: Storage | undefined,
     currentYear = new Date().getFullYear(),
+    private readonly onCompleteChange: (complete: boolean) => void = () => undefined,
   ) {
     this.currentYear = currentYear;
     this.values = loadBasicInputValues(storage, currentYear);
@@ -91,6 +92,7 @@ export class BasicInputsForm {
     this.form.setAttribute('aria-busy', 'false');
     this.form.querySelector('#loading-status')?.remove();
     this.save();
+    this.notifyCompletionChange();
   }
 
   showLoadingError(): void {
@@ -164,6 +166,18 @@ export class BasicInputsForm {
     }
 
     this.save();
+    this.notifyCompletionChange();
+  }
+
+  private notifyCompletionChange(): void {
+    const controls = [...CHOICE_FIELDS, ...AMOUNT_FIELDS].map((field) => this.getControl(field));
+    const complete =
+      this.form.getAttribute('aria-busy') === 'false' &&
+      controls.every(
+        (control) => !control.disabled && control.value.trim() !== '' && control.checkValidity(),
+      );
+
+    this.onCompleteChange(complete);
   }
 
   private save(): void {
@@ -189,7 +203,7 @@ export class BasicInputsForm {
     return control as T;
   }
 
-  private setLabel(field: keyof BasicInputValues, label: string): HTMLLabelElement {
+  private setLabel(field: keyof BasicInputValues, label: string): void {
     const element = this.form.querySelector<HTMLLabelElement>(`label[for="${field}"]`);
 
     if (element === null) {
@@ -197,7 +211,6 @@ export class BasicInputsForm {
     }
 
     element.textContent = label;
-    return element;
   }
 
   private setHint(field: keyof BasicInputValues, hint: string): void {

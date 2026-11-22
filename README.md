@@ -2,7 +2,7 @@
 
 Eine schlanke, deutschsprachige Webanwendung für persönliche Steuer-Szenarien im Kanton Zürich. Die Steuerberechnung soll direkt im Browser über den offiziellen Rechner des Kantons erfolgen; die Anwendung enthält keine eigene Steuerberechnung und kein Backend.
 
-Der aktuelle Stand erfasst die Grundangaben und speichert sie ausschließlich lokal im Browser. Die Auswahllisten werden vom offiziellen Rechner des Kantons geladen. Die konkrete Berechnungsintegration folgt nach Bereitstellung der weiteren API-Details.
+Der aktuelle Stand erfasst die Grundangaben und speichert sie ausschließlich lokal im Browser. Die Auswahllisten werden vom offiziellen Rechner des Kantons geladen. Ein linksseitiges Menü führt zu den Basisangaben und – sobald alle Angaben gültig ausgefüllt sind – zur Basisrechnung. Die konkrete Berechnungsintegration folgt nach Bereitstellung der weiteren API-Details.
 
 ## Dokumentation
 
