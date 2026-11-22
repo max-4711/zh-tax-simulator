@@ -33,6 +33,9 @@ describe('renderApp', () => {
     'childrenNo',
     'taxableIncome',
     'ascertainedTaxableIncome',
+    'useDifferentFederalIncome',
+    'federalTaxableIncome',
+    'federalAscertainedTaxableIncome',
     'taxableAssets',
     'ascertainedTaxableAssets',
   ])('enthält das Pflichtfeld %s', (field) => {

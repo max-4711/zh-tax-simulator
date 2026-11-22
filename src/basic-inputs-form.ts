@@ -83,6 +83,7 @@ export class BasicInputsForm {
 
     this.configureAmount(metadata, 'taxableIncome');
     this.configureAmount(metadata, 'taxableAssets');
+    this.configureFederalIncome(metadata);
 
     for (const baseField of Object.keys(LINKED_AMOUNTS) as AmountField[]) {
       const { ascertained, hint } = LINKED_AMOUNTS[baseField];
@@ -133,6 +134,40 @@ export class BasicInputsForm {
     input.disabled = false;
   }
 
+  private configureFederalIncome(metadata: CalculatorMetadata): void {
+    const configuration = readAmountConfiguration(metadata, 'taxableIncome');
+    const checkbox = this.getControl<HTMLInputElement>('useDifferentFederalIncome');
+    checkbox.checked = this.values.useDifferentFederalIncome === 'true';
+
+    for (const field of ['federalTaxableIncome', 'federalAscertainedTaxableIncome'] as const) {
+      const input = this.getControl<HTMLInputElement>(field);
+      this.setLabel(
+        field,
+        field === 'federalTaxableIncome'
+          ? configuration.label
+          : this.amountLabel('taxableIncome'),
+      );
+      input.min = '0';
+      input.step = configuration.hasFractionDigits ? '0.01' : '1';
+      input.max = configuration.maximum === null ? '' : String(configuration.maximum);
+      input.value = this.values[field];
+      this.setHint(field, '');
+    }
+    this.updateFederalIncomeVisibility();
+  }
+
+  private updateFederalIncomeVisibility(): void {
+    const enabled = this.values.useDifferentFederalIncome === 'true';
+    const fields = this.form.querySelector<HTMLElement>('#federal-income-fields');
+    if (fields === null) {
+      throw new Error('Die Eingabefelder für das Bundes-Einkommen fehlen.');
+    }
+    fields.hidden = !enabled;
+    for (const field of ['federalTaxableIncome', 'federalAscertainedTaxableIncome'] as const) {
+      this.getControl<HTMLInputElement>(field).disabled = !enabled;
+    }
+  }
+
   private amountLabel(field: AmountField): string {
     return field === 'taxableIncome'
       ? 'Satzbestimmendes Einkommen'
@@ -140,15 +175,30 @@ export class BasicInputsForm {
   }
 
   private bindEvents(): void {
-    for (const field of [...CHOICE_FIELDS, ...AMOUNT_FIELDS, 'childrenNo' as const]) {
+    for (const field of [
+      ...CHOICE_FIELDS,
+      ...AMOUNT_FIELDS,
+      'childrenNo',
+      'federalTaxableIncome',
+      'federalAscertainedTaxableIncome',
+    ] as const) {
       this.getControl(field).addEventListener('input', () => {
         this.handleInput(field);
       });
     }
+    this.getControl<HTMLInputElement>('useDifferentFederalIncome').addEventListener(
+      'change',
+      () => this.toggleFederalIncome(),
+    );
   }
 
   private handleInput(
-    field: (typeof CHOICE_FIELDS)[number] | (typeof AMOUNT_FIELDS)[number] | 'childrenNo',
+    field:
+      | (typeof CHOICE_FIELDS)[number]
+      | (typeof AMOUNT_FIELDS)[number]
+      | 'childrenNo'
+      | 'federalTaxableIncome'
+      | 'federalAscertainedTaxableIncome',
   ): void {
     this.values[field] = this.getControl(field).value;
 
@@ -181,6 +231,30 @@ export class BasicInputsForm {
     if (field === 'taxYear' || field === 'taxScale') {
       void this.updateChildrenConfiguration();
     }
+  }
+
+  private toggleFederalIncome(): void {
+    const enabled = this.getControl<HTMLInputElement>('useDifferentFederalIncome').checked;
+    this.values.useDifferentFederalIncome = String(enabled);
+    if (
+      enabled &&
+      this.values.federalTaxableIncome === '' &&
+      this.values.federalAscertainedTaxableIncome === ''
+    ) {
+      this.values.federalTaxableIncome = this.values.taxableIncome;
+      this.values.federalAscertainedTaxableIncome = this.values.ascertainedTaxableIncome;
+      this.getControl<HTMLInputElement>('federalTaxableIncome').value =
+        this.values.federalTaxableIncome;
+      this.getControl<HTMLInputElement>('federalAscertainedTaxableIncome').value =
+        this.values.federalAscertainedTaxableIncome;
+    }
+    this.getControl<HTMLInputElement>('federalTaxableIncome').value =
+      this.values.federalTaxableIncome;
+    this.getControl<HTMLInputElement>('federalAscertainedTaxableIncome').value =
+      this.values.federalAscertainedTaxableIncome;
+    this.updateFederalIncomeVisibility();
+    this.save();
+    this.notifyCompletionChange();
   }
 
   private async updateChildrenConfiguration(): Promise<void> {
@@ -233,9 +307,16 @@ export class BasicInputsForm {
       this.childrenConfiguration !== undefined &&
       (!this.childrenConfiguration.applicable ||
         (!childrenInput.disabled && childrenInput.checkValidity()));
+    const federalComplete =
+      this.values.useDifferentFederalIncome !== 'true' ||
+      (['federalTaxableIncome', 'federalAscertainedTaxableIncome'] as const).every((field) => {
+        const input = this.getControl<HTMLInputElement>(field);
+        return !input.disabled && input.value.trim() !== '' && input.checkValidity();
+      });
     const complete =
       this.form.getAttribute('aria-busy') === 'false' &&
       childrenComplete &&
+      federalComplete &&
       controls.every(
         (control) => !control.disabled && control.value.trim() !== '' && control.checkValidity(),
       );

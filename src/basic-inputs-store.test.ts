@@ -21,6 +21,9 @@ describe('lokal gespeicherte Grundangaben', () => {
       childrenNo: '0',
       taxableIncome: '',
       ascertainedTaxableIncome: '',
+      useDifferentFederalIncome: 'false',
+      federalTaxableIncome: '',
+      federalAscertainedTaxableIncome: '',
       taxableAssets: '',
       ascertainedTaxableAssets: '',
     });

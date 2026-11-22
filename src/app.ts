@@ -23,7 +23,12 @@ function renderChoiceField(field: (typeof CHOICE_FIELDS)[number]): string {
     </div>`;
 }
 
-function renderAmountField(field: (typeof AMOUNT_FIELDS)[number]): string {
+type AmountInputField =
+  | (typeof AMOUNT_FIELDS)[number]
+  | 'federalTaxableIncome'
+  | 'federalAscertainedTaxableIncome';
+
+function renderAmountField(field: AmountInputField): string {
   return `
     <div class="field">
       <label for="${field}"></label>
@@ -160,6 +165,19 @@ export function renderApp(): string {
               <legend>Einkommen</legend>
               <div class="form-grid amount-grid">
                 ${AMOUNT_FIELDS.slice(0, 2).map(renderAmountField).join('')}
+              </div>
+            </fieldset>
+
+            <fieldset class="federal-income-settings">
+              <legend>Bundessteuer</legend>
+              <label class="checkbox-field" for="useDifferentFederalIncome">
+                <input id="useDifferentFederalIncome" name="useDifferentFederalIncome" type="checkbox" />
+                <span>Abweichende Einkommensbeträge für die Bundessteuer verwenden</span>
+              </label>
+              <p class="field-hint">Standardmässig gelten die oben erfassten Einkommensbeträge auch für die Bundessteuer.</p>
+              <div id="federal-income-fields" class="form-grid amount-grid" hidden>
+                ${renderAmountField('federalTaxableIncome')}
+                ${renderAmountField('federalAscertainedTaxableIncome')}
               </div>
             </fieldset>
 

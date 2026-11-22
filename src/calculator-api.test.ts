@@ -200,6 +200,29 @@ describe('Bundessteuer', () => {
     fetchMock.mockRestore();
   });
 
+  it('verwendet optional die separat erfassten Bundes-Einkommensbeträge', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(federalResponse), { status: 200 }),
+    );
+    const values = {
+      ...emptyBasicInputValues(2027),
+      taxScale: 'BASIC',
+      taxableIncome: '73000',
+      ascertainedTaxableIncome: '74000',
+      useDifferentFederalIncome: 'true',
+      federalTaxableIncome: '70000',
+      federalAscertainedTaxableIncome: '71000',
+    };
+
+    await calculateFederalTaxes(values);
+
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toMatchObject({
+      taxableIncome: 70000,
+      ascertainedTaxableIncome: 71000,
+    });
+    fetchMock.mockRestore();
+  });
+
   it('verwendet bei fehlendem satzbestimmendem Einkommen das steuerbare Einkommen', () => {
     const result = readFederalTaxCalculationResult(federalResponse);
 

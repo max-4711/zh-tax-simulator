@@ -731,6 +731,28 @@ dl {
   color: #8b3028;
 }
 
+.checkbox-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.checkbox-field input {
+  flex-shrink: 0;
+  width: 18px;
+  min-height: 18px;
+  margin: 1px 0 0;
+  padding: 0;
+  accent-color: #526e56;
+}
+
+.federal-income-settings > .field-hint {
+  margin-left: 28px;
+}
+
 .tax-placeholder-label {
   display: inline-block;
   margin-top: 20px;

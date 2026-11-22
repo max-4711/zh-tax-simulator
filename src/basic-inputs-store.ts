@@ -9,6 +9,9 @@ export interface BasicInputValues {
   childrenNo: string;
   taxableIncome: string;
   ascertainedTaxableIncome: string;
+  useDifferentFederalIncome: string;
+  federalTaxableIncome: string;
+  federalAscertainedTaxableIncome: string;
   taxableAssets: string;
   ascertainedTaxableAssets: string;
 }
@@ -25,6 +28,9 @@ const INPUT_KEYS = Object.keys({
   childrenNo: '0',
   taxableIncome: '',
   ascertainedTaxableIncome: '',
+  useDifferentFederalIncome: 'false',
+  federalTaxableIncome: '',
+  federalAscertainedTaxableIncome: '',
   taxableAssets: '',
   ascertainedTaxableAssets: '',
 } satisfies BasicInputValues) as (keyof BasicInputValues)[];
@@ -39,6 +45,9 @@ export function emptyBasicInputValues(currentYear: number): BasicInputValues {
     childrenNo: '0',
     taxableIncome: '',
     ascertainedTaxableIncome: '',
+    useDifferentFederalIncome: 'false',
+    federalTaxableIncome: '',
+    federalAscertainedTaxableIncome: '',
     taxableAssets: '',
     ascertainedTaxableAssets: '',
   };

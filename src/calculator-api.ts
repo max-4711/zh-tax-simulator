@@ -284,8 +284,16 @@ export async function calculateFederalTaxes(
       taxYear: values.taxYear,
       taxScale: federalTaxScale(values.taxScale),
       childrenNo: values.childrenNo,
-      taxableIncome: Number(values.taxableIncome),
-      ascertainedTaxableIncome: Number(values.ascertainedTaxableIncome),
+      taxableIncome: Number(
+        values.useDifferentFederalIncome === 'true'
+          ? values.federalTaxableIncome
+          : values.taxableIncome,
+      ),
+      ascertainedTaxableIncome: Number(
+        values.useDifferentFederalIncome === 'true'
+          ? values.federalAscertainedTaxableIncome
+          : values.ascertainedTaxableIncome,
+      ),
     }),
   });
   if (!response.ok) {
