@@ -4,7 +4,7 @@ Die folgenden Informationen werden für die nächsten Ausbaustufen benötigt. Si
 
 | ID | Offener Punkt |
 | --- | --- |
-| OPEN-001 | API-Dokumentation: Basis-URL, Endpunkte, Methoden, Parameter, Schemata, Authentifizierung, Begrenzungen und Fehlerverhalten des offiziellen Steuerrechners. |
+| OPEN-001 | API-Dokumentation der eigentlichen Berechnung: Endpunkte, Methoden, Parameter, Anfrage- und Antwortschemata, Begrenzungen und Fehlerverhalten. Der Metadatenabruf für die Grundangaben ist unter CALC-003 beschrieben. |
 | OPEN-002 | Fachlicher Umfang: Steuerarten, Steuerjahre und unterstützte Steuerpflichtige beziehungsweise Gemeinden. |
 | OPEN-003 | Szenariomodell: Eingabefelder, Vergleich mehrerer Szenarien und gewünschte Darstellung beziehungsweise Export der Ergebnisse. |
 | OPEN-004 | Nutzungsbedingungen: Vorgaben des Kantons zur API-Nutzung, zu Hinweisen, Quellenangaben und zum Datenschutz. |

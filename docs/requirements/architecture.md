@@ -12,9 +12,9 @@ Die Anwendung wird als statische HTML-, CSS- und JavaScript-Dateien gebaut. Ein 
 
 Der technische Stack ist TypeScript mit Vite. Die Benutzeroberfläche verwendet HTML und CSS ohne zusätzliches UI-Framework. Vitest wird für Unit-Tests verwendet. Die Wahl berücksichtigt einen verbreiteten Stack, geringe Komplexität und eine kleine statische Anwendung.
 
-## ARCH-004: Keine Persistenz oder Benutzerverwaltung
+## ARCH-004: Lokale Speicherung ohne Benutzerverwaltung
 
-Es gibt keine serverseitige Datenpersistenz, kein Benutzerkonto und keine Benutzerverwaltung. Bis zu einer abweichenden Anforderung speichert die Anwendung keine Steuerdaten dauerhaft im Browser.
+Es gibt keine serverseitige Datenpersistenz, kein Benutzerkonto und keine Benutzerverwaltung. Die Grundangaben werden ausschließlich im Local Storage des jeweiligen Browsers gespeichert und bei jeder Eingabeänderung aktualisiert. Beim erneuten Besuch werden gespeicherte Werte in den Eingabefeldern wiederhergestellt. Ungültige oder nicht mehr angebotene Auswahlen werden nicht übernommen; beschädigte Speicherinhalte werden ignoriert. Bei nicht verfügbarem Local Storage bleibt die Erfassung für die laufende Sitzung nutzbar und die fehlende dauerhafte Speicherung wird angezeigt.
 
 ## ARCH-005: Quellcode-Struktur
 

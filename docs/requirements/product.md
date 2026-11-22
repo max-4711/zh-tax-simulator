@@ -10,7 +10,13 @@ Alle für Benutzer sichtbaren Texte und Angaben sind auf Deutsch zu formulieren.
 
 ## PROD-003: Anwendungsform
 
-Die Anwendung ist eine im Webbrowser nutzbare Webanwendung. Für die erste Projektphase wird eine kleine Einstiegsseite bereitgestellt; konkrete Eingabefelder und Szenariofunktionen folgen nach Klärung der fachlichen Anforderungen.
+Die Anwendung ist eine im Webbrowser nutzbare, persönliche Hilfsanwendung ohne behördlichen oder sonstigen offiziellen Auftritt. Die schlichte, deutschsprachige Einstiegsseite enthält die Erfassung der Grundangaben für spätere Szenarien; Vergleichs- und Berechnungsfunktionen folgen in weiteren Ausbaustufen.
+
+## PROD-005: Grundangaben
+
+Die Benutzer erfassen Zivilstand, Steuerjahr, Tarif, Konfession, Gemeinde, steuerbares Einkommen, satzbestimmendes Einkommen, steuerbares Vermögen und satzbestimmendes Vermögen. Alle Angaben sind für spätere Berechnungen erforderlich. Auswahlfelder und Betragsangaben verwenden die Bezeichnungen beziehungsweise Vorgaben der offiziellen Schnittstelle; für Einkommen und Vermögen steht keine Auswahl zur Verfügung.
+
+Zivilstand, Tarif, Konfession und Gemeinde haben keinen vorbelegten Wert. Das Steuerjahr wird bei erstmaliger Nutzung auf das aktuelle Kalenderjahr gesetzt, sofern dieses vom Rechner unterstützt wird. Die satzbestimmenden Beträge entsprechen zunächst den jeweiligen steuerbaren Beträgen. Bei einer Änderung des steuerbaren Betrags folgt der satzbestimmende Betrag, solange keine abweichende Eingabe dafür erfolgt ist. Nach einer abweichenden Eingabe bleibt der eigene Wert erhalten; eine erneute Gleichsetzung stellt die Verknüpfung wieder her.
 
 ## PROD-004: Fachliche Grenzen
 

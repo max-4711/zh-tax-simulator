@@ -1,8 +1,8 @@
 # Zürcher Steuer-Szenariorechner
 
-Eine schlanke, deutschsprachige Webanwendung für Steuer-Szenarien im Kanton Zürich. Die Steuerberechnung soll direkt im Browser über den offiziellen Rechner des Kantons erfolgen; die Anwendung enthält keine eigene Steuerberechnung, kein Backend und keine Persistenz.
+Eine schlanke, deutschsprachige Webanwendung für persönliche Steuer-Szenarien im Kanton Zürich. Die Steuerberechnung soll direkt im Browser über den offiziellen Rechner des Kantons erfolgen; die Anwendung enthält keine eigene Steuerberechnung und kein Backend.
 
-Der aktuelle Stand stellt die Projektstruktur, Entwicklungsumgebung, Prüfungen und Bereitstellung bereit. Die konkrete Rechnerintegration folgt nach Bereitstellung der API-Details.
+Der aktuelle Stand erfasst die Grundangaben und speichert sie ausschließlich lokal im Browser. Die Auswahllisten werden vom offiziellen Rechner des Kantons geladen. Die konkrete Berechnungsintegration folgt nach Bereitstellung der weiteren API-Details.
 
 ## Dokumentation
 

@@ -1,53 +1,101 @@
+export const CHOICE_FIELDS = [
+  'maritalStatus',
+  'taxYear',
+  'taxScale',
+  'religionP1',
+  'municipality',
+] as const;
+
+export const AMOUNT_FIELDS = [
+  'taxableIncome',
+  'ascertainedTaxableIncome',
+  'taxableAssets',
+  'ascertainedTaxableAssets',
+] as const;
+
+function renderChoiceField(field: (typeof CHOICE_FIELDS)[number]): string {
+  return `
+    <div class="field">
+      <label for="${field}"></label>
+      <select id="${field}" name="${field}" required disabled>
+        <option value="">Bitte wählen</option>
+      </select>
+    </div>`;
+}
+
+function renderAmountField(field: (typeof AMOUNT_FIELDS)[number]): string {
+  return `
+    <div class="field">
+      <label for="${field}"></label>
+      <div class="amount-input">
+        <input
+          id="${field}"
+          name="${field}"
+          type="number"
+          inputmode="decimal"
+          min="0"
+          placeholder="0"
+          required
+        />
+        <span aria-hidden="true">CHF</span>
+      </div>
+      <p class="field-hint" id="${field}-hint"></p>
+    </div>`;
+}
+
 export function renderApp(): string {
   return `
     <header class="site-header">
-      <a class="wordmark" href="./" aria-label="Steuer-Szenarien – Startseite">
-        <span class="wordmark-icon" aria-hidden="true">ZH</span>
-        <span>Steuer-Szenarien</span>
-      </a>
+      <span>Persönliches Steuer-Notiztool</span>
       <span class="location">Kanton Zürich</span>
     </header>
 
     <main>
       <section class="intro" aria-labelledby="page-title">
-        <p class="eyebrow">Klarheit für Ihre Planung</p>
-        <h1 id="page-title">Steuern im Kanton Zürich.<br /><span>Im Szenario betrachtet.</span></h1>
-        <p class="intro-text">
-          Ein schlanker Rechner für Ihre Steuer-Szenarien – auf Grundlage der
-          offiziellen Berechnung des Kantons Zürich.
+        <h1 id="page-title">Meine Steuerdaten</h1>
+        <p>
+          Ein paar Angaben für meine eigenen Steuer-Szenarien. Die Auswahllisten
+          kommen vom offiziellen Rechner des Kantons Zürich.
         </p>
       </section>
 
-      <section class="status-card" aria-labelledby="status-title">
-        <div class="status-heading">
-          <span class="status-icon" aria-hidden="true">i</span>
-          <div>
-            <p class="section-label">Projektstatus</p>
-            <h2 id="status-title">Die Grundlage ist geschaffen.</h2>
-          </div>
+      <form id="basic-inputs" class="input-form" aria-busy="true">
+        <div class="form-heading">
+          <h2>Grundangaben</h2>
+          <span>Alle Felder sind erforderlich.</span>
         </div>
-        <p>
-          Die technische Infrastruktur ist bereit. Sobald die Details der offiziellen
-          Schnittstelle vorliegen, werden hier die Eingabemöglichkeiten für Ihre
-          Szenarien ergänzt.
+
+        <p id="loading-status" class="form-status" role="status">
+          Auswahlmöglichkeiten werden geladen …
         </p>
-        <div class="principles">
-          <div>
-            <span class="principle-number">01</span>
-            <h3>Offizielle Berechnung</h3>
-            <p>Keine eigene Steuerlogik. Die Berechnung kommt vom Kanton Zürich.</p>
-          </div>
-          <div>
-            <span class="principle-number">02</span>
-            <h3>Direkt in Ihrem Browser</h3>
-            <p>Kein Benutzerkonto und keine Speicherung Ihrer Steuerdaten.</p>
-          </div>
+
+        <div class="form-grid">
+          ${CHOICE_FIELDS.map(renderChoiceField).join('')}
         </div>
-      </section>
+
+        <fieldset>
+          <legend>Einkommen</legend>
+          <div class="form-grid amount-grid">
+            ${AMOUNT_FIELDS.slice(0, 2).map(renderAmountField).join('')}
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Vermögen</legend>
+          <div class="form-grid amount-grid">
+            ${AMOUNT_FIELDS.slice(2).map(renderAmountField).join('')}
+          </div>
+        </fieldset>
+
+        <p id="storage-status" class="storage-note">
+          Änderungen werden automatisch nur in diesem Browser gespeichert.
+        </p>
+        <noscript>Zum Erfassen der Angaben wird JavaScript benötigt.</noscript>
+      </form>
     </main>
 
     <footer>
-      <p>Keine Steuerberatung. Keine rechtsverbindliche Steuerveranlagung.</p>
+      <p>Privates Hilfsmittel · Keine Steuerberatung oder rechtsverbindliche Steuerveranlagung.</p>
     </footer>
   `;
 }

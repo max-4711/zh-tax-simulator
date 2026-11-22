@@ -2,19 +2,27 @@ import { describe, expect, it } from 'vitest';
 import { renderApp } from './app';
 
 describe('renderApp', () => {
-  it('zeigt die deutschsprachige Einstiegsseite mit Hauptbereich', () => {
+  it('zeigt die persönliche Erfassung der Grundangaben', () => {
     const page = renderApp();
 
-    expect(page).toContain('<main>');
-    expect(page).toContain('<h1 id="page-title">Steuern im Kanton Zürich.');
-    expect(page).toContain('Kanton Zürich');
+    expect(page).toContain('<h1 id="page-title">Meine Steuerdaten</h1>');
+    expect(page).toContain('<form id="basic-inputs"');
+    expect(page).toContain('Persönliches Steuer-Notiztool');
+    expect(page).not.toContain('Projektstatus');
+    expect(page).not.toContain('wordmark-icon');
   });
 
-  it('kennzeichnet die Berechnung als noch nicht verfügbar', () => {
-    const page = renderApp();
-
-    expect(page).toContain('Die Grundlage ist geschaffen.');
-    expect(page).toContain('Sobald die Details der offiziellen');
-    expect(page).not.toContain('<form');
+  it.each([
+    'maritalStatus',
+    'taxYear',
+    'taxScale',
+    'religionP1',
+    'municipality',
+    'taxableIncome',
+    'ascertainedTaxableIncome',
+    'taxableAssets',
+    'ascertainedTaxableAssets',
+  ])('enthält das Pflichtfeld %s', (field) => {
+    expect(renderApp()).toContain(`name="${field}"`);
   });
 });
