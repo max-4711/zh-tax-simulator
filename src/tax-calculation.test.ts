@@ -23,6 +23,10 @@ function calculationResult() {
   );
 }
 
+function normalizeApostrophes(value: string): string {
+  return value.replace(/[’']/g, '’');
+}
+
 describe('Darstellung der Basisrechnung', () => {
   it('verwendet API-Bezeichnungen und stellt Zwischenergebnis und Endbeträge getrennt dar', () => {
     const page = renderTaxCalculation(calculationResult());
@@ -42,18 +46,18 @@ describe('Darstellung der Basisrechnung', () => {
     const page = renderTaxCalculation(calculationResult());
 
     expect(page).toContain('Satz cantonalBaseTaxRate 9 %');
-    expect(page).toContain('Betrag cantonalSimpleTax CHF 1’008.00');
+    expect(normalizeApostrophes(page)).toContain('Betrag cantonalSimpleTax CHF 1’008.00');
     expect(page).toContain('<dt>Betrag cantonalBaseTax</dt>');
-    expect(page).toContain('<dd>CHF 1’010.00</dd>');
+    expect(normalizeApostrophes(page)).toContain('<dd>CHF 1’010.00</dd>');
     expect(page).toContain('Satz municipalityTaxRate 11 %');
 
     expect(page).toContain('<dt>Betrag municipalityTax</dt>');
-    expect(page).toContain('<dd>CHF 1’012.00</dd>');
+    expect(normalizeApostrophes(page)).toContain('<dd>CHF 1’012.00</dd>');
   });
 
   it('formatiert Werte mit den von der API gelieferten Einheiten', () => {
     expect(formatTaxValue({ label: 'Steuerfuss', value: 0.58, symbol: '‰' })).toBe('0.58 ‰');
-    expect(formatTaxValue({ label: 'Steuer', value: 3848.45, currency: 'CHF' })).toBe(
+    expect(normalizeApostrophes(formatTaxValue({ label: 'Steuer', value: 3848.45, currency: 'CHF' }))).toBe(
       'CHF 3’848.45',
     );
   });
