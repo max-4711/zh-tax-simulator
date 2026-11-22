@@ -195,7 +195,71 @@ export function readTaxCalculationResult(response: unknown): TaxCalculationResul
   for (const field of TAX_RESULT_FIELDS) {
     result[field] = readTaxValue(response[field], field);
   }
+  result.incomeTax.label = 'Einkommenssteuer';
+  result.assetsTax.label = 'Vermögenssteuer';
   return result;
+}
+
+function numericValue(field: TaxValue): number {
+  if (typeof field.value !== 'number') {
+    throw new Error(`Der Steuerwert ${field.label} ist keine Zahl.`);
+  }
+  return field.value;
+}
+
+function roundedTax(base: number, rate: number, divisor: number, increment: number): number {
+  const units = Math.floor((base * rate) / divisor / increment + 1e-9);
+  return Math.round(units * increment * 100) / 100;
+}
+
+function correctedAmount(field: TaxValue, value: number): TaxValue {
+  return { ...field, value };
+}
+
+export function correctCantonalTaxResult(
+  result: TaxCalculationResult,
+  taxableIncome: number,
+  taxableAssets: number,
+): TaxCalculationResult {
+  const incomeTax = roundedTax(taxableIncome, numericValue(result.incomeTaxRate), 100, 1);
+  const assetsTax = roundedTax(taxableAssets, numericValue(result.assetsTaxRate), 1000, 1);
+  const simpleTax = incomeTax + assetsTax;
+  const cantonalBaseTax = roundedTax(
+    simpleTax,
+    numericValue(result.cantonalBaseTaxRate),
+    100,
+    0.05,
+  );
+  const municipalityTax = roundedTax(
+    simpleTax,
+    numericValue(result.municipalityTaxRate),
+    100,
+    0.05,
+  );
+  const religionTax = roundedTax(
+    simpleTax,
+    numericValue(result.religionTaxRateP1),
+    100,
+    0.05,
+  );
+  const personalTax = numericValue(result.personalTax);
+
+  return {
+    ...result,
+    ascertainedTaxableIncome: result.ascertainedTaxableIncome,
+    taxableIncome: correctedAmount(result.taxableIncome, taxableIncome),
+    incomeTax: correctedAmount(result.incomeTax, incomeTax),
+    taxableAssets: correctedAmount(result.taxableAssets, taxableAssets),
+    assetsTax: correctedAmount(result.assetsTax, assetsTax),
+    cantonalSimpleTax: correctedAmount(result.cantonalSimpleTax, simpleTax),
+    cantonalBaseTax: correctedAmount(result.cantonalBaseTax, cantonalBaseTax),
+    municipalityTax: correctedAmount(result.municipalityTax, municipalityTax),
+    religionTaxP1: correctedAmount(result.religionTaxP1, religionTax),
+    totalCantonalTax: correctedAmount(
+      result.totalCantonalTax,
+      cantonalBaseTax + municipalityTax + religionTax + personalTax,
+    ),
+  };
 }
 
 export async function calculateTaxes(
@@ -207,10 +271,8 @@ export async function calculateTaxes(
     taxScale: values.taxScale,
     religionP1: values.religionP1,
     municipality: values.municipality,
-    taxableIncome: Number(values.taxableIncome),
-    ascertainedTaxableIncome: Number(values.ascertainedTaxableIncome),
-    taxableAssets: Number(values.taxableAssets),
-    ascertainedTaxableAssets: Number(values.ascertainedTaxableAssets),
+    taxableIncome: Number(values.ascertainedTaxableIncome),
+    taxableAssets: Number(values.ascertainedTaxableAssets),
   };
   const response = await fetch(CALCULATOR_CALCULATION_URL, {
     method: 'POST',
@@ -222,7 +284,11 @@ export async function calculateTaxes(
     throw new Error(`Der Steuerrechner antwortet mit Status ${response.status}.`);
   }
 
-  return readTaxCalculationResult(await response.json());
+  return correctCantonalTaxResult(
+    readTaxCalculationResult(await response.json()),
+    Number(values.taxableIncome),
+    Number(values.taxableAssets),
+  );
 }
 
 export interface FederalTaxCalculationResult {
@@ -240,12 +306,10 @@ export function readFederalTaxCalculationResult(
   if (!isRecord(response)) {
     throw new Error('Die Antwort des Bundessteuerrechners ist ungültig.');
   }
-  const ascertained =
-    response.taxableAscertainedFederalIncome ?? response.taxableFederalIncome;
   return {
     taxableAscertainedFederalIncome: readTaxValue(
-      ascertained,
-      'taxableAscertainedFederalIncome',
+      response.taxableFederalIncome,
+      'taxableFederalIncome',
     ),
     taxableFederalIncome: readTaxValue(
       response.taxableFederalIncome,
@@ -274,9 +338,42 @@ export function federalTaxScale(taxScale: string): string {
   throw new Error(`Der Tarif ${taxScale} wird vom Bundessteuerrechner nicht unterstützt.`);
 }
 
+export function correctFederalTaxResult(
+  result: FederalTaxCalculationResult,
+  taxableIncome: number,
+): FederalTaxCalculationResult {
+  const totalFederalTax = roundedTax(
+    taxableIncome,
+    numericValue(result.federalTaxRate),
+    100,
+    0.05,
+  );
+  const deduction =
+    result.childrenDeduction === null ? 0 : numericValue(result.childrenDeduction);
+  return {
+    ...result,
+    taxableFederalIncome: correctedAmount(result.taxableFederalIncome, taxableIncome),
+    totalFederalTax: correctedAmount(result.totalFederalTax, totalFederalTax),
+    totalAfterChildrenDeduction: correctedAmount(
+      result.totalAfterChildrenDeduction,
+      Math.round((totalFederalTax - deduction) * 100) / 100,
+    ),
+  };
+}
+
 export async function calculateFederalTaxes(
   values: import('./basic-inputs-store').BasicInputValues,
 ): Promise<FederalTaxCalculationResult> {
+  const taxableIncome = Number(
+    values.useDifferentFederalIncome === 'true'
+      ? values.federalTaxableIncome
+      : values.taxableIncome,
+  );
+  const ascertainedTaxableIncome = Number(
+    values.useDifferentFederalIncome === 'true'
+      ? values.federalAscertainedTaxableIncome
+      : values.ascertainedTaxableIncome,
+  );
   const response = await fetch(FEDERAL_CALCULATION_URL, {
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
@@ -284,22 +381,16 @@ export async function calculateFederalTaxes(
       taxYear: values.taxYear,
       taxScale: federalTaxScale(values.taxScale),
       childrenNo: values.childrenNo,
-      taxableIncome: Number(
-        values.useDifferentFederalIncome === 'true'
-          ? values.federalTaxableIncome
-          : values.taxableIncome,
-      ),
-      ascertainedTaxableIncome: Number(
-        values.useDifferentFederalIncome === 'true'
-          ? values.federalAscertainedTaxableIncome
-          : values.ascertainedTaxableIncome,
-      ),
+      taxableIncome: ascertainedTaxableIncome,
     }),
   });
   if (!response.ok) {
     throw new Error(`Der Bundessteuerrechner antwortet mit Status ${response.status}.`);
   }
-  return readFederalTaxCalculationResult(await response.json());
+  return correctFederalTaxResult(
+    readFederalTaxCalculationResult(await response.json()),
+    taxableIncome,
+  );
 }
 
 export async function fetchCalculatorMetadata(): Promise<CalculatorMetadata> {

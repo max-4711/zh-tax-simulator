@@ -6,6 +6,8 @@ import {
   FEDERAL_METADATA_URL,
   calculateFederalTaxes,
   calculateTaxes,
+  correctCantonalTaxResult,
+  correctFederalTaxResult,
   federalTaxScale,
   fetchCalculatorMetadata,
   fetchChildrenConfiguration,
@@ -114,10 +116,8 @@ describe('Steuerberechnung', () => {
         taxScale: 'BASIC',
         religionP1: 'OTHERS',
         municipality: '14',
-        taxableIncome: 73000,
-        ascertainedTaxableIncome: 74000,
-        taxableAssets: 480000,
-        ascertainedTaxableAssets: 490000,
+        taxableIncome: 74000,
+        taxableAssets: 490000,
       }),
     });
     fetchMock.mockRestore();
@@ -130,8 +130,34 @@ describe('Steuerberechnung', () => {
     });
 
     expect(result.cantonalSimpleTax.label).toBe('Bezeichnung cantonalSimpleTax');
+    expect(result.incomeTax.label).toBe('Einkommenssteuer');
+    expect(result.assetsTax.label).toBe('Vermögenssteuer');
     expect(result.personalTaxRate.value).toBe('pauschal');
     expect(() => readTaxCalculationResult({})).toThrow('ascertainedTaxableIncome');
+  });
+
+  it('korrigiert Steuerbeträge und abhängige kantonale Ergebnisse mit den offiziellen Sätzen', () => {
+    const result = readTaxCalculationResult({
+      ...calculationResponse,
+      incomeTaxRate: { label: 'Einkommenssatz', value: 5.208, symbol: '%' },
+      assetsTaxRate: { label: 'Vermögenssatz', value: 0.588, symbol: '‰' },
+      cantonalBaseTaxRate: { label: 'Staatssteuerfuss', value: 95, symbol: '%' },
+      municipalityTaxRate: { label: 'Gemeindesteuerfuss', value: 89, symbol: '%' },
+      religionTaxRateP1: { label: 'Kirchensteuerfuss', value: 10, symbol: '%' },
+      personalTax: { label: 'Personalsteuer', value: 24, currency: 'CHF' },
+    });
+
+    const corrected = correctCantonalTaxResult(result, 73000, 480000);
+
+    expect(corrected.incomeTax.value).toBe(3801);
+    expect(corrected.assetsTax.value).toBe(282);
+    expect(corrected.cantonalSimpleTax.value).toBe(4083);
+    expect(corrected.cantonalBaseTax.value).toBe(3878.85);
+    expect(corrected.municipalityTax.value).toBe(3633.85);
+    expect(corrected.religionTaxP1.value).toBe(408.3);
+    expect(corrected.totalCantonalTax.value).toBe(7945);
+    expect(corrected.taxableIncome.value).toBe(73000);
+    expect(corrected.taxableAssets.value).toBe(480000);
   });
 });
 
@@ -193,8 +219,7 @@ describe('Bundessteuer', () => {
         taxYear: '2027',
         taxScale: 'MARRIED_OR_SINGLE_PARENT',
         childrenNo: '1',
-        taxableIncome: 73000,
-        ascertainedTaxableIncome: 74000,
+        taxableIncome: 74000,
       }),
     });
     fetchMock.mockRestore();
@@ -216,9 +241,11 @@ describe('Bundessteuer', () => {
 
     await calculateFederalTaxes(values);
 
-    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toMatchObject({
-      taxableIncome: 70000,
-      ascertainedTaxableIncome: 71000,
+    expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+      taxYear: '2027',
+      taxScale: 'SINGLE',
+      childrenNo: '0',
+      taxableIncome: 71000,
     });
     fetchMock.mockRestore();
   });
@@ -232,5 +259,16 @@ describe('Bundessteuer', () => {
       ...federalResponse,
       childrenDeduction: null,
     }).childrenDeduction).toBeNull();
+  });
+
+  it('berechnet die Bundessteuer mit dem satzbestimmenden Satz und dem steuerbaren Einkommen', () => {
+    const corrected = correctFederalTaxResult(
+      readFederalTaxCalculationResult(federalResponse),
+      73000,
+    );
+
+    expect(corrected.totalFederalTax.value).toBe(737.3);
+    expect(corrected.totalAfterChildrenDeduction.value).toBe(473.3);
+    expect(corrected.taxableFederalIncome.value).toBe(73000);
   });
 });

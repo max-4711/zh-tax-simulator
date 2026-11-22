@@ -22,15 +22,21 @@ Die Berechnungsseite zeigt die Bezeichnungen, Werte, Währungen und Einheiten au
 
 `totalCantonalTax` wird als Zwischensumme der kantonalen Schnittstelle gelesen. Während der Berechnung erscheint ein Ladestatus; bei Fehlern werden keine veralteten Ergebnisse angezeigt und ein erneuter Versuch ist möglich.
 
+## CALC-006: Korrektur bekannter Schnittstellenfehler
+
+Die fehlerhaften API-Bezeichnungen von `incomeTax` und `assetsTax` werden durch «Einkommenssteuer» beziehungsweise «Vermögenssteuer» ersetzt. Da die kantonale Schnittstelle abweichende satzbestimmende Beträge nicht korrekt verarbeitet, enthält die Anfrage als `taxableIncome` und `taxableAssets` jeweils den satzbestimmenden Betrag. Die so ermittelten offiziellen Steuersätze werden mit den tatsächlich steuerbaren Beträgen multipliziert und auf ganze Franken abgerundet. Einfache Steuer, davon abhängige Steuerbeträge und das kantonale Total werden aus diesen korrigierten Werten und den offiziellen Steuerfüssen neu gebildet; die Rundung auf fünf Rappen bleibt erhalten.
+
+Für die Bundessteuer wird kein satzbestimmendes Einkommen an die Schnittstelle gesendet oder aus ihrer Antwort gelesen. Stattdessen wird das satzbestimmende Einkommen als `taxableIncome` zur Ermittlung des offiziellen Satzes gesendet. Die Bundessteuer wird mit dem tatsächlich steuerbaren Einkommen berechnet und auf fünf Rappen abgerundet; anschliessend wird der Kinderabzug berücksichtigt. Diese begrenzten Korrekturen sind ausdrücklich von der sonstigen Beschränkung auf die offizielle Berechnung ausgenommen.
+
 ## CALC-005: Bundessteuer und Gesamttotal
 
 Für die Anwendbarkeit und Bezeichnung der Kinderanzahl wird `POST https://webcalc.services.zh.ch/ZH-Web-Calculators/calculators/FEDERAL` mit Steuerjahr und Tarifcode aufgerufen. Ist `childrenNo` in der Antwort `null`, bleibt das Eingabefeld verborgen. Andernfalls wird es mit der gelieferten Bezeichnung und Obergrenze angezeigt; der gespeicherte Standardwert ist 0. Änderungen von Steuerjahr oder Tarif aktualisieren die Konfiguration, ohne dass veraltete Antworten übernommen werden.
 
-Beim Öffnen der Basisrechnung wird parallel zur kantonalen Berechnung `POST https://webcalc.services.zh.ch/ZH-Web-Calculators/calculators/FEDERAL/calculate` aufgerufen. Die Anfrage enthält Steuerjahr, den auf den offiziellen Bundessteuercode abgebildeten Tarif (`BASIC` zu `SINGLE`), Kinderanzahl sowie steuerbares und satzbestimmendes Einkommen. Standardmässig werden die gemeinsamen Einkommensbeträge verwendet; bei aktivierter Option gelten stattdessen die separat erfassten Bundessteuerbeträge. Für das satzbestimmende Bundes-Einkommen wird `taxableAscertainedFederalIncome` verwendet; falls dieses `null` ist, gilt `taxableFederalIncome` als Ersatz.
+Beim Öffnen der Basisrechnung wird parallel zur kantonalen Berechnung `POST https://webcalc.services.zh.ch/ZH-Web-Calculators/calculators/FEDERAL/calculate` aufgerufen. Die Anfrage enthält Steuerjahr, den auf den offiziellen Bundessteuercode abgebildeten Tarif (`BASIC` zu `SINGLE`), Kinderanzahl sowie steuerbares und satzbestimmendes Einkommen. Standardmässig werden die gemeinsamen Einkommensbeträge verwendet; bei aktivierter Option gelten stattdessen die separat erfassten Bundessteuerbeträge. Die Behandlung des satzbestimmenden Einkommens ist unter CALC-006 beschrieben.
 
 Die Darstellung zeigt den Zusammenhang zwischen satzbestimmendem Einkommen und Steuersatz, die Multiplikation mit dem steuerbaren Einkommen und – sofern vorhanden – den Kinderabzug bis zu `totalAfterChildrenDeduction`. Dieser Endbetrag ist der geschuldete Bundessteuerbetrag. Das hervorgehobene Gesamttotal ist die Summe aus `cantonalBaseTax`, `municipalityTax`, `religionTaxP1`, `personalTax` und `totalAfterChildrenDeduction`.
 
-## CALC-006: Vergleichsberechnung
+## CALC-007: Vergleichsberechnung
 
 Für den 1:1 Vergleich werden sowohl die aktuellen Basisangaben als auch die Vergleichsangaben mit den Schnittstellen aus CALC-004 und CALC-005 berechnet. Eine Änderung der Vergleichswerte löst nach einer kurzen Wartezeit eine erneute Berechnung aus; veraltete Antworten werden verworfen. Während der Aktualisierung ist der Ladestatus sichtbar, bei einem Fehler werden keine veralteten Ergebnisse angezeigt und ein erneuter Versuch ist möglich.
 
