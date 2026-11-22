@@ -4,6 +4,8 @@ Eine schlanke, deutschsprachige Webanwendung für persönliche Steuer-Szenarien 
 
 Die Anwendung erfasst die Grundangaben und speichert sie ausschließlich lokal im Browser. Die Auswahllisten werden vom offiziellen Rechner des Kantons geladen. Ein linksseitiges Menü führt zu den Basisangaben und – sobald alle Angaben gültig ausgefüllt sind – zur Basisrechnung. Diese berechnet beim Öffnen automatisch Staats-, Gemeinde-, Kirchen-, Personal- und Bundessteuer und zeigt die einzelnen Berechnungsschritte sowie das Gesamttotal. Für die Bundessteuer wird bei entsprechendem Tarif auch die Anzahl eigener Kinder im gleichen Haushalt erfasst.
 
+Unter „Vergleichsszenarien → 1:1 Vergleich“ können dieselben Angaben direkt neben den Ergebnissen verändert werden. Die Seite berechnet Basis- und Vergleichsszenario automatisch und stellt Gesamttotal, Zwischenergebnisse, Steuerbeträge und Steuersätze mit absoluten und relativen Differenzen gegenüber. Vergleichseingaben werden nicht gespeichert.
+
 ## Dokumentation
 
 - [Anforderungen und offene Punkte](docs/requirements/README.md)

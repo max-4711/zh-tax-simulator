@@ -24,6 +24,16 @@ describe('renderApp', () => {
     expect(page).toMatch(/id="basisrechnung-navigation"[\s\S]*?disabled/);
   });
 
+  it('enthält den interaktiven, nicht gespeicherten 1:1 Vergleich in der Navigation', () => {
+    const page = renderApp();
+
+    expect(page).toContain('Vergleichsszenarien');
+    expect(page).toContain('data-page-target="vergleich-1-zu-1"');
+    expect(page).toContain('id="comparison-inputs"');
+    expect(page).toContain('id="comparison-calculation-results"');
+    expect(page).toContain('Diese Eingaben werden nicht gespeichert.');
+  });
+
   it.each([
     'maritalStatus',
     'taxYear',

@@ -67,10 +67,10 @@ function taxCard(
     </article>`;
 }
 
-export function renderTaxCalculation(
+export function totalTaxValue(
   result: TaxCalculationResult,
   federal: FederalTaxCalculationResult,
-): string {
+): TaxValue {
   const payableFields = [
     result.cantonalBaseTax,
     result.municipalityTax,
@@ -78,12 +78,18 @@ export function renderTaxCalculation(
     result.personalTax,
     federal.totalAfterChildrenDeduction,
   ];
-  const total = payableFields.reduce((sum, field) => sum + Number(field.value), 0);
-  const totalValue: TaxValue = {
+  return {
     label: 'Total Steuern inklusive direkter Bundessteuer',
-    value: total,
+    value: payableFields.reduce((sum, field) => sum + Number(field.value), 0),
     currency: 'CHF',
   };
+}
+
+export function renderTaxCalculation(
+  result: TaxCalculationResult,
+  federal: FederalTaxCalculationResult,
+): string {
+  const totalValue = totalTaxValue(result, federal);
   return `
     <section class="tax-overview" aria-labelledby="tax-total-title">
       <div>

@@ -16,6 +16,8 @@ Der technische Stack ist TypeScript mit Vite. Die Benutzeroberfläche verwendet 
 
 Es gibt keine serverseitige Datenpersistenz, kein Benutzerkonto und keine Benutzerverwaltung. Die Grundangaben werden ausschließlich im Local Storage des jeweiligen Browsers gespeichert und bei jeder Eingabeänderung aktualisiert. Beim erneuten Besuch werden gespeicherte Werte in den Eingabefeldern wiederhergestellt. Ungültige oder nicht mehr angebotene Auswahlen werden nicht übernommen; beschädigte Speicherinhalte werden ignoriert. Bei nicht verfügbarem Local Storage bleibt die Erfassung für die laufende Sitzung nutzbar und die fehlende dauerhafte Speicherung wird angezeigt.
 
+Eingaben in Vergleichsszenarien werden nicht persistiert. Sie werden beim Öffnen der Anwendung aus den aktuellen Basisangaben initialisiert und ausschliesslich im Arbeitsspeicher gehalten; Änderungen beeinflussen weder die gespeicherten Basisangaben noch deren Wiederherstellung.
+
 ## ARCH-005: Quellcode-Struktur
 
 Anwendungscode und seine Tests liegen unter `src/`. Statische, nicht verarbeitete Dateien liegen unter `public/`. Die verbindlichen Anforderungen liegen unter `docs/requirements/`.

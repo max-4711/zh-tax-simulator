@@ -29,3 +29,9 @@ Für die Anwendbarkeit und Bezeichnung der Kinderanzahl wird `POST https://webca
 Beim Öffnen der Basisrechnung wird parallel zur kantonalen Berechnung `POST https://webcalc.services.zh.ch/ZH-Web-Calculators/calculators/FEDERAL/calculate` aufgerufen. Die Anfrage enthält Steuerjahr, den auf den offiziellen Bundessteuercode abgebildeten Tarif (`BASIC` zu `SINGLE`), Kinderanzahl sowie steuerbares und satzbestimmendes Einkommen. Standardmässig werden die gemeinsamen Einkommensbeträge verwendet; bei aktivierter Option gelten stattdessen die separat erfassten Bundessteuerbeträge. Für das satzbestimmende Bundes-Einkommen wird `taxableAscertainedFederalIncome` verwendet; falls dieses `null` ist, gilt `taxableFederalIncome` als Ersatz.
 
 Die Darstellung zeigt den Zusammenhang zwischen satzbestimmendem Einkommen und Steuersatz, die Multiplikation mit dem steuerbaren Einkommen und – sofern vorhanden – den Kinderabzug bis zu `totalAfterChildrenDeduction`. Dieser Endbetrag ist der geschuldete Bundessteuerbetrag. Das hervorgehobene Gesamttotal ist die Summe aus `cantonalBaseTax`, `municipalityTax`, `religionTaxP1`, `personalTax` und `totalAfterChildrenDeduction`.
+
+## CALC-006: Vergleichsberechnung
+
+Für den 1:1 Vergleich werden sowohl die aktuellen Basisangaben als auch die Vergleichsangaben mit den Schnittstellen aus CALC-004 und CALC-005 berechnet. Eine Änderung der Vergleichswerte löst nach einer kurzen Wartezeit eine erneute Berechnung aus; veraltete Antworten werden verworfen. Während der Aktualisierung ist der Ladestatus sichtbar, bei einem Fehler werden keine veralteten Ergebnisse angezeigt und ein erneuter Versuch ist möglich.
+
+Differenzen und Prozentangaben sind ausschliesslich Vergleichsdarstellungen der offiziellen Ergebnisse und keine eigene Steuerberechnung.

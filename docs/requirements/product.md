@@ -10,7 +10,7 @@ Alle für Benutzer sichtbaren Texte und Angaben sind auf Deutsch zu formulieren.
 
 ## PROD-003: Anwendungsform
 
-Die Anwendung ist eine im Webbrowser nutzbare, persönliche Hilfsanwendung ohne behördlichen oder sonstigen offiziellen Auftritt. Die schlichte, deutschsprachige Einstiegsseite enthält die Erfassung der Grundangaben für spätere Szenarien; Vergleichs- und Berechnungsfunktionen folgen in weiteren Ausbaustufen.
+Die Anwendung ist eine im Webbrowser nutzbare, persönliche Hilfsanwendung ohne behördlichen oder sonstigen offiziellen Auftritt. Die schlichte, deutschsprachige Einstiegsseite enthält die Erfassung der Grundangaben für spätere Szenarien sowie eine Basisrechnung und einen interaktiven 1:1 Vergleich.
 
 ## PROD-005: Grundangaben
 
@@ -20,7 +20,13 @@ Zivilstand, Tarif, Konfession und Gemeinde haben keinen vorbelegten Wert. Das St
 
 ## PROD-006: Navigation und Freischaltung
 
-Die zentrale Navigation ist ein anfangs geöffnetes, linksseitiges Menü. Unter „Basisszenario“ führt „Basisangaben“ zum Formular gemäss PROD-005 und „Basisrechnung“ zur Berechnungsseite. „Basisangaben“ ist die Startseite. Die Basisrechnung bleibt gesperrt, bis alle Basisangaben gültig ausgefüllt sind; die Freischaltung erfolgt ohne Bestätigungsschaltfläche. Beim erstmaligen Erreichen der Vollständigkeit erscheint ein dezenter, schliessbarer Hinweis, über den direkt zur Basisrechnung gewechselt werden kann. Nach dem Verlassen des Formulars wird der Hinweis ausgeblendet. Das Menü bietet Platz für weitere Szenarien.
+Die zentrale Navigation ist ein anfangs geöffnetes, linksseitiges Menü. Unter „Basisszenario“ führt „Basisangaben“ zum Formular gemäss PROD-005 und „Basisrechnung“ zur Berechnungsseite. „Basisangaben“ ist die Startseite. Die Basisrechnung bleibt gesperrt, bis alle Basisangaben gültig ausgefüllt sind; die Freischaltung erfolgt ohne Bestätigungsschaltfläche. Beim erstmaligen Erreichen der Vollständigkeit erscheint ein dezenter, schliessbarer Hinweis, über den direkt zur Basisrechnung gewechselt werden kann. Nach dem Verlassen des Formulars wird der Hinweis ausgeblendet. Das Menü bietet Platz für weitere Szenarien. Unter dem eigenen Hauptmenüpunkt „Vergleichsszenarien“ führt „1:1 Vergleich“ direkt zu Eingaben und Ergebnissen auf derselben Seite.
+
+## PROD-007: 1:1 Vergleich
+
+Das Vergleichsszenario wird mit einer Kopie der aktuellen Basisangaben initialisiert und bietet dieselben Eingabefelder und Verknüpfungen wie das Basisszenario. Seine Eingaben dienen dem Ausprobieren und werden nicht gespeichert. Nach gültigen Änderungen werden die Ergebnisse ohne zusätzlichen Navigations- oder Bestätigungsschritt aktualisiert.
+
+Die Ergebnisse des Basisszenarios und des Vergleichsszenarios werden gegenübergestellt. Das Gesamttotal ist visuell hervorgehoben; auch Zwischenergebnisse, Steuerbeträge und Steuersätze werden verglichen. Jede numerische Position zeigt die absolute Differenz „Vergleich minus Basis“ und die relative Veränderung gegenüber dem Basiswert. Bei einem Basiswert von 0 oder nicht numerischen Werten wird keine Prozentangabe dargestellt.
 
 ## PROD-004: Fachliche Grenzen
 

@@ -1,4 +1,4 @@
-export type AppPage = 'basisangaben' | 'basisrechnung';
+export type AppPage = 'basisangaben' | 'basisrechnung' | 'vergleich-1-zu-1';
 
 export class AppNavigation {
   private readonly drawer: HTMLElement;
@@ -40,7 +40,11 @@ export class AppNavigation {
       link.addEventListener('click', () => {
         const target = link.dataset.pageTarget;
 
-        if (target === 'basisangaben' || target === 'basisrechnung') {
+        if (
+          target === 'basisangaben' ||
+          target === 'basisrechnung' ||
+          target === 'vergleich-1-zu-1'
+        ) {
           this.showPage(target);
         }
       });

@@ -1,4 +1,4 @@
-import { AMOUNT_FIELDS, CHOICE_FIELDS } from './app';
+import { AMOUNT_FIELDS, CHOICE_FIELDS, type InputField } from './input-fields';
 import {
   fetchChildrenConfiguration,
   readAmountConfiguration,
@@ -30,6 +30,13 @@ const LINKED_AMOUNTS: Record<
   },
 };
 
+export interface BasicInputsFormOptions {
+  storage?: Storage | undefined;
+  initialValues?: BasicInputValues;
+  persist?: boolean;
+  onCompleteChange?: (complete: boolean) => void;
+}
+
 export class BasicInputsForm {
   private readonly values: BasicInputValues;
   private readonly overridden = new Set<AscertainedField>();
@@ -39,12 +46,13 @@ export class BasicInputsForm {
 
   constructor(
     private readonly form: HTMLFormElement,
-    private readonly storage: Storage | undefined,
     currentYear = new Date().getFullYear(),
-    private readonly onCompleteChange: (complete: boolean) => void = () => undefined,
+    private readonly options: BasicInputsFormOptions = {},
   ) {
     this.currentYear = currentYear;
-    this.values = loadBasicInputValues(storage, currentYear);
+    this.values = {
+      ...(options.initialValues ?? loadBasicInputValues(options.storage, currentYear)),
+    };
     this.bindEvents();
 
     for (const [base, { ascertained }] of Object.entries(LINKED_AMOUNTS)) {
@@ -95,7 +103,7 @@ export class BasicInputsForm {
     }
 
     this.form.setAttribute('aria-busy', 'false');
-    this.form.querySelector('#loading-status')?.remove();
+    this.form.querySelector('[data-loading-status]')?.remove();
     this.save();
     this.notifyCompletionChange();
     void this.updateChildrenConfiguration();
@@ -106,7 +114,7 @@ export class BasicInputsForm {
   }
 
   showLoadingError(): void {
-    const status = this.form.querySelector<HTMLElement>('#loading-status');
+    const status = this.form.querySelector<HTMLElement>('[data-loading-status]');
 
     if (status !== null) {
       status.textContent =
@@ -158,7 +166,7 @@ export class BasicInputsForm {
 
   private updateFederalIncomeVisibility(): void {
     const enabled = this.values.useDifferentFederalIncome === 'true';
-    const fields = this.form.querySelector<HTMLElement>('#federal-income-fields');
+    const fields = this.form.querySelector<HTMLElement>('.federal-income-settings .form-grid');
     if (fields === null) {
       throw new Error('Die Eingabefelder für das Bundes-Einkommen fehlen.');
     }
@@ -192,14 +200,7 @@ export class BasicInputsForm {
     );
   }
 
-  private handleInput(
-    field:
-      | (typeof CHOICE_FIELDS)[number]
-      | (typeof AMOUNT_FIELDS)[number]
-      | 'childrenNo'
-      | 'federalTaxableIncome'
-      | 'federalAscertainedTaxableIncome',
-  ): void {
+  private handleInput(field: InputField): void {
     this.values[field] = this.getControl(field).value;
 
     if (field === 'taxableIncome' || field === 'taxableAssets') {
@@ -259,9 +260,9 @@ export class BasicInputsForm {
 
   private async updateChildrenConfiguration(): Promise<void> {
     const requestNumber = ++this.childrenRequestNumber;
-    const field = this.form.querySelector<HTMLElement>('#children-no-field');
+    const field = this.form.querySelector<HTMLElement>('.children-field');
     const input = this.getControl<HTMLInputElement>('childrenNo');
-    const status = this.form.querySelector<HTMLElement>('#children-no-status');
+    const status = this.form.querySelector<HTMLElement>('.children-field .field-hint');
     if (field === null || status === null) {
       throw new Error('Das Eingabefeld für die Kinderanzahl fehlt.');
     }
@@ -321,12 +322,16 @@ export class BasicInputsForm {
         (control) => !control.disabled && control.value.trim() !== '' && control.checkValidity(),
       );
 
-    this.onCompleteChange(complete);
+    this.options.onCompleteChange?.(complete);
   }
 
   private save(): void {
-    const saved = saveBasicInputValues(this.storage, this.values);
-    const status = this.form.querySelector<HTMLElement>('#storage-status');
+    if (this.options.persist === false) {
+      return;
+    }
+
+    const saved = saveBasicInputValues(this.options.storage, this.values);
+    const status = this.form.querySelector<HTMLElement>('.storage-note');
 
     if (status !== null) {
       status.textContent = saved
@@ -348,7 +353,7 @@ export class BasicInputsForm {
   }
 
   private setLabel(field: keyof BasicInputValues, label: string): void {
-    const element = this.form.querySelector<HTMLLabelElement>(`label[for="${field}"]`);
+    const element = this.form.querySelector<HTMLLabelElement>(`label[for="${this.getControl(field).id}"]`);
 
     if (element === null) {
       throw new Error(`Die Beschriftung für ${field} fehlt.`);
@@ -358,7 +363,7 @@ export class BasicInputsForm {
   }
 
   private setHint(field: keyof BasicInputValues, hint: string): void {
-    const element = this.form.querySelector<HTMLElement>(`#${field}-hint`);
+    const element = this.form.querySelector<HTMLElement>(`[id="${this.getControl(field).id}-hint"]`);
 
     if (element !== null) {
       element.textContent = hint;

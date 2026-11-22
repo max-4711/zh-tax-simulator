@@ -1,53 +1,4 @@
-export const CHOICE_FIELDS = [
-  'maritalStatus',
-  'taxYear',
-  'taxScale',
-  'religionP1',
-  'municipality',
-] as const;
-
-export const AMOUNT_FIELDS = [
-  'taxableIncome',
-  'ascertainedTaxableIncome',
-  'taxableAssets',
-  'ascertainedTaxableAssets',
-] as const;
-
-function renderChoiceField(field: (typeof CHOICE_FIELDS)[number]): string {
-  return `
-    <div class="field">
-      <label for="${field}"></label>
-      <select id="${field}" name="${field}" required disabled>
-        <option value="">Bitte wählen</option>
-      </select>
-    </div>`;
-}
-
-type AmountInputField =
-  | (typeof AMOUNT_FIELDS)[number]
-  | 'federalTaxableIncome'
-  | 'federalAscertainedTaxableIncome';
-
-function renderAmountField(field: AmountInputField): string {
-  return `
-    <div class="field">
-      <label for="${field}"></label>
-      <div class="amount-input">
-        <input
-          id="${field}"
-          name="${field}"
-          type="number"
-          inputmode="decimal"
-          aria-describedby="${field}-hint"
-          min="0"
-          placeholder="0"
-          required
-        />
-        <span aria-hidden="true">CHF</span>
-      </div>
-      <p class="field-hint" id="${field}-hint"></p>
-    </div>`;
-}
+import { renderInputFields } from './input-fields';
 
 export function renderApp(): string {
   return `
@@ -122,6 +73,21 @@ export function renderApp(): string {
               </li>
             </ul>
           </li>
+          <li class="comparison-navigation">
+            <div class="scenario-label">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M8 4 4 8l4 4M4 8h16M16 20l4-4-4-4M20 16H4" />
+              </svg>
+              <span>Vergleichsszenarien</span>
+            </div>
+            <ul class="sub-navigation">
+              <li>
+                <button class="sub-navigation-link" type="button" data-page-target="vergleich-1-zu-1">
+                  <span>1:1 Vergleich</span>
+                </button>
+              </li>
+            </ul>
+          </li>
         </ul>
       </nav>
       <p id="navigation-lock-hint" class="navigation-lock-hint">
@@ -142,55 +108,10 @@ export function renderApp(): string {
           </div>
 
           <form id="basic-inputs" class="input-form" aria-busy="true">
-            <div class="form-heading">
-              <h2>Grundangaben</h2>
-              <span>Alle Felder sind erforderlich.</span>
-            </div>
-
-            <p id="loading-status" class="form-status" role="status">
-              Auswahlmöglichkeiten werden geladen …
-            </p>
-
-            <div class="form-grid">
-              ${CHOICE_FIELDS.map(renderChoiceField).join('')}
-            </div>
-
-            <div id="children-no-field" class="field children-field" hidden>
-              <label for="childrenNo"></label>
-              <input id="childrenNo" name="childrenNo" type="number" inputmode="numeric" min="0" step="1" value="0" required disabled />
-              <p id="children-no-status" class="field-hint" role="status"></p>
-            </div>
-
-            <fieldset>
-              <legend>Einkommen</legend>
-              <div class="form-grid amount-grid">
-                ${AMOUNT_FIELDS.slice(0, 2).map(renderAmountField).join('')}
-              </div>
-            </fieldset>
-
-            <fieldset class="federal-income-settings">
-              <legend>Bundessteuer</legend>
-              <label class="checkbox-field" for="useDifferentFederalIncome">
-                <input id="useDifferentFederalIncome" name="useDifferentFederalIncome" type="checkbox" />
-                <span>Abweichende Einkommensbeträge für die Bundessteuer verwenden</span>
-              </label>
-              <p class="field-hint">Standardmässig gelten die oben erfassten Einkommensbeträge auch für die Bundessteuer.</p>
-              <div id="federal-income-fields" class="form-grid amount-grid" hidden>
-                ${renderAmountField('federalTaxableIncome')}
-                ${renderAmountField('federalAscertainedTaxableIncome')}
-              </div>
-            </fieldset>
-
-            <fieldset>
-              <legend>Vermögen</legend>
-              <div class="form-grid amount-grid">
-                ${AMOUNT_FIELDS.slice(2).map(renderAmountField).join('')}
-              </div>
-            </fieldset>
-
-            <p id="storage-status" class="storage-note">
-              Änderungen werden automatisch nur in diesem Browser gespeichert.
-            </p>
+            ${renderInputFields(
+              'Änderungen werden automatisch nur in diesem Browser gespeichert.',
+              'loading-status',
+            )}
             <noscript>Zum Erfassen der Angaben wird JavaScript benötigt.</noscript>
           </form>
         </section>
@@ -206,6 +127,31 @@ export function renderApp(): string {
             <button id="tax-calculation-retry" class="secondary-button" type="button" hidden>Erneut berechnen</button>
           </div>
           <div id="tax-calculation-results" hidden></div>
+        </section>
+
+        <section id="vergleich-1-zu-1-page" class="comparison-page" data-page="vergleich-1-zu-1" aria-labelledby="comparison-title" hidden>
+          <div class="intro">
+            <p class="eyebrow">Vergleichsszenarien</p>
+            <h1 id="comparison-title" tabindex="-1">1:1 Vergleich</h1>
+            <p>Ändere die Angaben und sieh direkt, wie sich die Steuerbelastung gegenüber dem Basisszenario verändert.</p>
+          </div>
+
+          <form id="comparison-inputs" class="input-form comparison-inputs" aria-busy="true">
+            ${renderInputFields(
+              'Nur zum Ausprobieren: Diese Eingaben werden nicht gespeichert.',
+              'comparison-loading-status',
+              'comparison-',
+            )}
+          </form>
+
+          <section class="comparison-results" aria-labelledby="comparison-results-title">
+            <h2 id="comparison-results-title" class="visually-hidden">Ergebnisse im Vergleich</h2>
+            <div class="calculation-status-row">
+              <p id="comparison-calculation-status" class="form-status" role="status" aria-live="polite">Vervollständige die Angaben für den Vergleich.</p>
+              <button id="comparison-calculation-retry" class="secondary-button" type="button" hidden>Erneut berechnen</button>
+            </div>
+            <div id="comparison-calculation-results" hidden></div>
+          </section>
         </section>
       </main>
 
