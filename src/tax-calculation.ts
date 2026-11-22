@@ -1,6 +1,8 @@
 import type { BasicInputValues } from './basic-inputs-store';
 import {
+  calculateFederalTaxes,
   calculateTaxes,
+  type FederalTaxCalculationResult,
   type TaxCalculationResult,
   type TaxValue,
 } from './calculator-api';
@@ -65,15 +67,31 @@ function taxCard(
     </article>`;
 }
 
-export function renderTaxCalculation(result: TaxCalculationResult): string {
+export function renderTaxCalculation(
+  result: TaxCalculationResult,
+  federal: FederalTaxCalculationResult,
+): string {
+  const payableFields = [
+    result.cantonalBaseTax,
+    result.municipalityTax,
+    result.religionTaxP1,
+    result.personalTax,
+    federal.totalAfterChildrenDeduction,
+  ];
+  const total = payableFields.reduce((sum, field) => sum + Number(field.value), 0);
+  const totalValue: TaxValue = {
+    label: 'Total Steuern inklusive direkter Bundessteuer',
+    value: total,
+    currency: 'CHF',
+  };
   return `
     <section class="tax-overview" aria-labelledby="tax-total-title">
       <div>
-        <p class="eyebrow">Zu zahlen</p>
-        <h2 id="tax-total-title">${escapeHtml(result.totalCantonalTax.label)}</h2>
-        <p>Ohne Bundessteuer. Diese wird in einer späteren Ausbaustufe ergänzt.</p>
+        <p class="eyebrow">Total zu zahlen</p>
+        <h2 id="tax-total-title">${totalValue.label}</h2>
+        <p>Staatssteuer + Gemeindesteuer + Kirchensteuer + Personalsteuer + Bundessteuer</p>
       </div>
-      <strong>${formatTaxValue(result.totalCantonalTax)}</strong>
+      <strong>${formatTaxValue(totalValue)}</strong>
     </section>
 
     <div class="tax-sections">
@@ -148,12 +166,25 @@ export function renderTaxCalculation(result: TaxCalculationResult): string {
             </div>
             <p class="tax-formula">${escapeHtml(result.personalTaxRate.label)}: ${formatTaxValue(result.personalTaxRate)}</p>
           </article>
-          <article class="tax-card tax-card-placeholder" aria-labelledby="federal-tax-title">
+          <article class="tax-card federal-tax-card" aria-labelledby="federal-tax-title">
             <div class="tax-card-heading">
               <h3 id="federal-tax-title">Bundessteuer</h3>
-              <span class="tax-placeholder-label">Folgt später</span>
+              ${resultField(federal.totalAfterChildrenDeduction)}
             </div>
-            <p class="tax-formula">Die Bundessteuer wird über eine separate Schnittstelle berechnet und ist in der obigen Summe noch nicht enthalten.</p>
+            <dl class="tax-details">
+              ${resultField(federal.taxableAscertainedFederalIncome)}
+              <div class="rate-arrow" aria-hidden="true">↓ bestimmt den Satz</div>
+              ${resultField(federal.federalTaxRate)}
+              ${resultField(federal.taxableFederalIncome)}
+            </dl>
+            <p class="tax-formula">${escapeHtml(federal.federalTaxRate.label)} ${formatTaxValue(federal.federalTaxRate)} × ${escapeHtml(federal.taxableFederalIncome.label)} ${formatTaxValue(federal.taxableFederalIncome)} = ${formatTaxValue(federal.totalFederalTax)}</p>
+            <dl>${resultField(federal.totalFederalTax)}</dl>
+            ${
+              federal.childrenDeduction === null
+                ? ''
+                : `<dl>${resultField(federal.childrenDeduction)}</dl>
+                   <p class="tax-formula">${formatTaxValue(federal.totalFederalTax)} − ${formatTaxValue(federal.childrenDeduction)} = ${formatTaxValue(federal.totalAfterChildrenDeduction)}</p>`
+            }
           </article>
         </div>
       </section>
@@ -170,6 +201,7 @@ export class TaxCalculationPage {
     root: HTMLElement,
     private readonly getValues: () => BasicInputValues,
     private readonly calculate: typeof calculateTaxes = calculateTaxes,
+    private readonly calculateFederal: typeof calculateFederalTaxes = calculateFederalTaxes,
   ) {
     this.results = this.getElement(root, '#tax-calculation-results');
     this.status = this.getElement(root, '#tax-calculation-status');
@@ -185,11 +217,15 @@ export class TaxCalculationPage {
     this.status.textContent = 'Die Steuerberechnung wird geladen …';
 
     try {
-      const result = await this.calculate(this.getValues());
+      const values = this.getValues();
+      const [result, federal] = await Promise.all([
+        this.calculate(values),
+        this.calculateFederal(values),
+      ]);
       if (requestNumber !== this.requestNumber) {
         return;
       }
-      this.results.innerHTML = renderTaxCalculation(result);
+      this.results.innerHTML = renderTaxCalculation(result, federal);
       this.results.hidden = false;
       this.status.dataset.state = 'success';
       this.status.textContent = 'Berechnung mit den aktuellen Basisangaben aktualisiert.';

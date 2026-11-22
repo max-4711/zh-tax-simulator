@@ -710,6 +710,27 @@ dl {
   background: transparent;
 }
 
+.federal-tax-card {
+  grid-column: 1 / -1;
+}
+
+.federal-tax-card .tax-card-heading {
+  min-height: 0;
+}
+
+.children-field {
+  max-width: calc(50% - 10px);
+  margin-top: 24px;
+}
+
+.children-field input {
+  padding-right: 11px;
+}
+
+.children-field [data-state='error'] {
+  color: #8b3028;
+}
+
 .tax-placeholder-label {
   display: inline-block;
   margin-top: 20px;
@@ -801,6 +822,10 @@ dl {
 
   .tax-card:last-child:nth-child(odd) {
     grid-column: auto;
+  }
+
+  .children-field {
+    max-width: none;
   }
 
   .tax-card-heading {

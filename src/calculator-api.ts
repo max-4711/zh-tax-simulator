@@ -1,6 +1,9 @@
 export const CALCULATOR_METADATA_URL =
   'https://webcalc.services.zh.ch/ZH-Web-Calculators/calculators/INCOME_ASSETS';
 export const CALCULATOR_CALCULATION_URL = `${CALCULATOR_METADATA_URL}/calculate`;
+export const FEDERAL_METADATA_URL =
+  'https://webcalc.services.zh.ch/ZH-Web-Calculators/calculators/FEDERAL';
+export const FEDERAL_CALCULATION_URL = `${FEDERAL_METADATA_URL}/calculate`;
 
 export interface CalculatorOption {
   code: string;
@@ -91,6 +94,48 @@ export function readAmountConfiguration(
   };
 }
 
+export interface ChildrenConfiguration {
+  applicable: boolean;
+  label: string;
+  maximum: number | null;
+}
+
+export function readChildrenConfiguration(metadata: unknown): ChildrenConfiguration {
+  if (!isRecord(metadata)) {
+    throw new Error('Die Antwort des Bundessteuerrechners ist ungültig.');
+  }
+  if (metadata.childrenNo === null) {
+    return { applicable: false, label: '', maximum: null };
+  }
+  const configuration = metadata.childrenNo;
+  if (!isRecord(configuration) || typeof configuration.label !== 'string') {
+    throw new Error('Die Angaben zur Kinderanzahl fehlen oder sind ungültig.');
+  }
+  return {
+    applicable: true,
+    label: configuration.label,
+    maximum:
+      typeof configuration.maxSize === 'number' && configuration.maxSize >= 0
+        ? configuration.maxSize
+        : null,
+  };
+}
+
+export async function fetchChildrenConfiguration(
+  taxYear: string,
+  taxScale: string,
+): Promise<ChildrenConfiguration> {
+  const response = await fetch(FEDERAL_METADATA_URL, {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ taxYear, taxScale }),
+  });
+  if (!response.ok) {
+    throw new Error(`Der Bundessteuerrechner antwortet mit Status ${response.status}.`);
+  }
+  return readChildrenConfiguration(await response.json());
+}
+
 export interface TaxValue {
   label: string;
   value: number | string;
@@ -178,6 +223,75 @@ export async function calculateTaxes(
   }
 
   return readTaxCalculationResult(await response.json());
+}
+
+export interface FederalTaxCalculationResult {
+  taxableAscertainedFederalIncome: TaxValue;
+  taxableFederalIncome: TaxValue;
+  federalTaxRate: TaxValue;
+  totalFederalTax: TaxValue;
+  childrenDeduction: TaxValue | null;
+  totalAfterChildrenDeduction: TaxValue;
+}
+
+export function readFederalTaxCalculationResult(
+  response: unknown,
+): FederalTaxCalculationResult {
+  if (!isRecord(response)) {
+    throw new Error('Die Antwort des Bundessteuerrechners ist ungültig.');
+  }
+  const ascertained =
+    response.taxableAscertainedFederalIncome ?? response.taxableFederalIncome;
+  return {
+    taxableAscertainedFederalIncome: readTaxValue(
+      ascertained,
+      'taxableAscertainedFederalIncome',
+    ),
+    taxableFederalIncome: readTaxValue(
+      response.taxableFederalIncome,
+      'taxableFederalIncome',
+    ),
+    federalTaxRate: readTaxValue(response.federalTaxRate, 'federalTaxRate'),
+    totalFederalTax: readTaxValue(response.totalFederalTax, 'totalFederalTax'),
+    childrenDeduction:
+      response.childrenDeduction === null
+        ? null
+        : readTaxValue(response.childrenDeduction, 'childrenDeduction'),
+    totalAfterChildrenDeduction: readTaxValue(
+      response.totalAfterChildrenDeduction,
+      'totalAfterChildrenDeduction',
+    ),
+  };
+}
+
+export function federalTaxScale(taxScale: string): string {
+  if (taxScale === 'BASIC') {
+    return 'SINGLE';
+  }
+  if (taxScale === 'MARRIED_OR_SINGLE_PARENT') {
+    return taxScale;
+  }
+  throw new Error(`Der Tarif ${taxScale} wird vom Bundessteuerrechner nicht unterstützt.`);
+}
+
+export async function calculateFederalTaxes(
+  values: import('./basic-inputs-store').BasicInputValues,
+): Promise<FederalTaxCalculationResult> {
+  const response = await fetch(FEDERAL_CALCULATION_URL, {
+    method: 'POST',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      taxYear: values.taxYear,
+      taxScale: federalTaxScale(values.taxScale),
+      childrenNo: values.childrenNo,
+      taxableIncome: Number(values.taxableIncome),
+      ascertainedTaxableIncome: Number(values.ascertainedTaxableIncome),
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Der Bundessteuerrechner antwortet mit Status ${response.status}.`);
+  }
+  return readFederalTaxCalculationResult(await response.json());
 }
 
 export async function fetchCalculatorMetadata(): Promise<CalculatorMetadata> {

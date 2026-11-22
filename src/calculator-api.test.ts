@@ -2,10 +2,17 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   CALCULATOR_CALCULATION_URL,
   CALCULATOR_METADATA_URL,
+  FEDERAL_CALCULATION_URL,
+  FEDERAL_METADATA_URL,
+  calculateFederalTaxes,
   calculateTaxes,
+  federalTaxScale,
   fetchCalculatorMetadata,
+  fetchChildrenConfiguration,
   readAmountConfiguration,
   readChoiceConfiguration,
+  readChildrenConfiguration,
+  readFederalTaxCalculationResult,
   readTaxCalculationResult,
   TAX_RESULT_FIELDS,
 } from './calculator-api';
@@ -125,5 +132,82 @@ describe('Steuerberechnung', () => {
     expect(result.cantonalSimpleTax.label).toBe('Bezeichnung cantonalSimpleTax');
     expect(result.personalTaxRate.value).toBe('pauschal');
     expect(() => readTaxCalculationResult({})).toThrow('ascertainedTaxableIncome');
+  });
+});
+
+describe('Bundessteuer', () => {
+  const federalResponse = {
+    taxableAscertainedFederalIncome: null,
+    taxableFederalIncome: { label: 'Steuerbares Einkommen', value: 73000, currency: 'CHF' },
+    federalTaxRate: { label: 'Steuersatz', value: 1.01, symbol: '%' },
+    totalFederalTax: { label: 'Total direkte Bundessteuer', value: 738, currency: 'CHF' },
+    childrenDeduction: { label: 'Kinderabzug', value: 264, currency: 'CHF' },
+    totalAfterChildrenDeduction: { label: 'Steuerbetrag', value: 474, currency: 'CHF' },
+  };
+
+  it('lädt die Anwendbarkeit und Bezeichnung der Kinderanzahl für den gewählten Tarif', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({
+        childrenNo: { label: 'Anzahl eigene Kinder im gleichen Haushalt', maxSize: 20 },
+      }), { status: 200 }),
+    );
+
+    await expect(fetchChildrenConfiguration('2027', 'MARRIED_OR_SINGLE_PARENT')).resolves.toEqual({
+      applicable: true,
+      label: 'Anzahl eigene Kinder im gleichen Haushalt',
+      maximum: 20,
+    });
+    expect(fetchMock).toHaveBeenCalledWith(FEDERAL_METADATA_URL, {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ taxYear: '2027', taxScale: 'MARRIED_OR_SINGLE_PARENT' }),
+    });
+    expect(readChildrenConfiguration({ childrenNo: null }).applicable).toBe(false);
+    fetchMock.mockRestore();
+  });
+
+  it('bildet die offiziellen Tarifcodes aufeinander ab', () => {
+    expect(federalTaxScale('BASIC')).toBe('SINGLE');
+    expect(federalTaxScale('MARRIED_OR_SINGLE_PARENT')).toBe('MARRIED_OR_SINGLE_PARENT');
+    expect(() => federalTaxScale('UNKNOWN')).toThrow();
+  });
+
+  it('übermittelt Einkommen und Kinderanzahl an den Bundessteuerrechner', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify(federalResponse), { status: 200 }),
+    );
+    const values = {
+      ...emptyBasicInputValues(2027),
+      taxScale: 'MARRIED_OR_SINGLE_PARENT',
+      childrenNo: '1',
+      taxableIncome: '73000',
+      ascertainedTaxableIncome: '74000',
+    };
+
+    await calculateFederalTaxes(values);
+
+    expect(fetchMock).toHaveBeenCalledWith(FEDERAL_CALCULATION_URL, {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        taxYear: '2027',
+        taxScale: 'MARRIED_OR_SINGLE_PARENT',
+        childrenNo: '1',
+        taxableIncome: 73000,
+        ascertainedTaxableIncome: 74000,
+      }),
+    });
+    fetchMock.mockRestore();
+  });
+
+  it('verwendet bei fehlendem satzbestimmendem Einkommen das steuerbare Einkommen', () => {
+    const result = readFederalTaxCalculationResult(federalResponse);
+
+    expect(result.taxableAscertainedFederalIncome).toEqual(federalResponse.taxableFederalIncome);
+    expect(result.childrenDeduction?.value).toBe(264);
+    expect(readFederalTaxCalculationResult({
+      ...federalResponse,
+      childrenDeduction: null,
+    }).childrenDeduction).toBeNull();
   });
 });

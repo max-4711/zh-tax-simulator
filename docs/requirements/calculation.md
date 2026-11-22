@@ -20,4 +20,12 @@ Beim Öffnen der Basisrechnung wird mit den vollständigen gespeicherten Basisan
 
 Die Berechnungsseite zeigt die Bezeichnungen, Werte, Währungen und Einheiten aus der Antwort. Sie unterscheidet die kantonale einfache Steuer als nicht direkt geschuldetes Zwischenergebnis von Staats-, Gemeinde-, Kirchen- und Personalsteuer. Bei Einkommens- und Vermögenssteuer ist erkennbar, dass der satzbestimmende Betrag den Steuersatz bestimmt und der Steuersatz mit dem steuerbaren Betrag zum Steuerbetrag führt. Bei den übrigen prozentualen Steuern ist die Multiplikation der einfachen Steuer mit dem Steuerfuss dargestellt; die Personalsteuer wird als Pauschale ausgewiesen.
 
-Als Gesamtbetrag wird `totalCantonalTax` der offiziellen Antwort angezeigt, ohne eigene Summenberechnung. Die noch nicht angebundene Bundessteuer ist als spätere Erweiterung gekennzeichnet und nicht in diesem Betrag enthalten. Während der Berechnung erscheint ein Ladestatus; bei Fehlern werden keine veralteten Ergebnisse angezeigt und ein erneuter Versuch ist möglich.
+`totalCantonalTax` wird als Zwischensumme der kantonalen Schnittstelle gelesen. Während der Berechnung erscheint ein Ladestatus; bei Fehlern werden keine veralteten Ergebnisse angezeigt und ein erneuter Versuch ist möglich.
+
+## CALC-005: Bundessteuer und Gesamttotal
+
+Für die Anwendbarkeit und Bezeichnung der Kinderanzahl wird `POST https://webcalc.services.zh.ch/ZH-Web-Calculators/calculators/FEDERAL` mit Steuerjahr und Tarifcode aufgerufen. Ist `childrenNo` in der Antwort `null`, bleibt das Eingabefeld verborgen. Andernfalls wird es mit der gelieferten Bezeichnung und Obergrenze angezeigt; der gespeicherte Standardwert ist 0. Änderungen von Steuerjahr oder Tarif aktualisieren die Konfiguration, ohne dass veraltete Antworten übernommen werden.
+
+Beim Öffnen der Basisrechnung wird parallel zur kantonalen Berechnung `POST https://webcalc.services.zh.ch/ZH-Web-Calculators/calculators/FEDERAL/calculate` aufgerufen. Die Anfrage enthält Steuerjahr, den auf den offiziellen Bundessteuercode abgebildeten Tarif (`BASIC` zu `SINGLE`), Kinderanzahl sowie steuerbares und satzbestimmendes Einkommen. Für das satzbestimmende Bundes-Einkommen wird `taxableAscertainedFederalIncome` verwendet; falls dieses `null` ist, gilt `taxableFederalIncome` als Ersatz.
+
+Die Darstellung zeigt den Zusammenhang zwischen satzbestimmendem Einkommen und Steuersatz, die Multiplikation mit dem steuerbaren Einkommen und – sofern vorhanden – den Kinderabzug bis zu `totalAfterChildrenDeduction`. Dieser Endbetrag ist der geschuldete Bundessteuerbetrag. Das hervorgehobene Gesamttotal ist die Summe aus `cantonalBaseTax`, `municipalityTax`, `religionTaxP1`, `personalTax` und `totalAfterChildrenDeduction`.

@@ -2,7 +2,7 @@
 
 Eine schlanke, deutschsprachige Webanwendung für persönliche Steuer-Szenarien im Kanton Zürich. Die Steuerberechnung soll direkt im Browser über den offiziellen Rechner des Kantons erfolgen; die Anwendung enthält keine eigene Steuerberechnung und kein Backend.
 
-Die Anwendung erfasst die Grundangaben und speichert sie ausschließlich lokal im Browser. Die Auswahllisten werden vom offiziellen Rechner des Kantons geladen. Ein linksseitiges Menü führt zu den Basisangaben und – sobald alle Angaben gültig ausgefüllt sind – zur Basisrechnung. Diese berechnet beim Öffnen automatisch Staats-, Gemeinde-, Kirchen- und Personalsteuer und zeigt die Ergebnisse inklusive kantonaler einfacher Steuer und Gesamtbetrag. Die Bundessteuer wird in einer späteren Ausbaustufe über eine separate Schnittstelle ergänzt.
+Die Anwendung erfasst die Grundangaben und speichert sie ausschließlich lokal im Browser. Die Auswahllisten werden vom offiziellen Rechner des Kantons geladen. Ein linksseitiges Menü führt zu den Basisangaben und – sobald alle Angaben gültig ausgefüllt sind – zur Basisrechnung. Diese berechnet beim Öffnen automatisch Staats-, Gemeinde-, Kirchen-, Personal- und Bundessteuer und zeigt die einzelnen Berechnungsschritte sowie das Gesamttotal. Für die Bundessteuer wird bei entsprechendem Tarif auch die Anzahl eigener Kinder im gleichen Haushalt erfasst.
 
 ## Dokumentation
 

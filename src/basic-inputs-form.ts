@@ -1,7 +1,9 @@
 import { AMOUNT_FIELDS, CHOICE_FIELDS } from './app';
 import {
+  fetchChildrenConfiguration,
   readAmountConfiguration,
   readChoiceConfiguration,
+  type ChildrenConfiguration,
   type AmountField,
   type CalculatorMetadata,
 } from './calculator-api';
@@ -32,6 +34,8 @@ export class BasicInputsForm {
   private readonly values: BasicInputValues;
   private readonly overridden = new Set<AscertainedField>();
   private readonly currentYear: number;
+  private childrenConfiguration: ChildrenConfiguration | undefined;
+  private childrenRequestNumber = 0;
 
   constructor(
     private readonly form: HTMLFormElement,
@@ -93,6 +97,7 @@ export class BasicInputsForm {
     this.form.querySelector('#loading-status')?.remove();
     this.save();
     this.notifyCompletionChange();
+    void this.updateChildrenConfiguration();
   }
 
   getValues(): BasicInputValues {
@@ -135,14 +140,16 @@ export class BasicInputsForm {
   }
 
   private bindEvents(): void {
-    for (const field of [...CHOICE_FIELDS, ...AMOUNT_FIELDS]) {
+    for (const field of [...CHOICE_FIELDS, ...AMOUNT_FIELDS, 'childrenNo' as const]) {
       this.getControl(field).addEventListener('input', () => {
         this.handleInput(field);
       });
     }
   }
 
-  private handleInput(field: (typeof CHOICE_FIELDS)[number] | (typeof AMOUNT_FIELDS)[number]): void {
+  private handleInput(
+    field: (typeof CHOICE_FIELDS)[number] | (typeof AMOUNT_FIELDS)[number] | 'childrenNo',
+  ): void {
     this.values[field] = this.getControl(field).value;
 
     if (field === 'taxableIncome' || field === 'taxableAssets') {
@@ -171,12 +178,64 @@ export class BasicInputsForm {
 
     this.save();
     this.notifyCompletionChange();
+    if (field === 'taxYear' || field === 'taxScale') {
+      void this.updateChildrenConfiguration();
+    }
+  }
+
+  private async updateChildrenConfiguration(): Promise<void> {
+    const requestNumber = ++this.childrenRequestNumber;
+    const field = this.form.querySelector<HTMLElement>('#children-no-field');
+    const input = this.getControl<HTMLInputElement>('childrenNo');
+    const status = this.form.querySelector<HTMLElement>('#children-no-status');
+    if (field === null || status === null) {
+      throw new Error('Das Eingabefeld für die Kinderanzahl fehlt.');
+    }
+
+    this.childrenConfiguration = undefined;
+    field.hidden = false;
+    input.disabled = true;
+    status.textContent = 'Angaben zur Bundessteuer werden geladen …';
+    this.notifyCompletionChange();
+
+    try {
+      const configuration = await fetchChildrenConfiguration(
+        this.values.taxYear,
+        this.values.taxScale,
+      );
+      if (requestNumber !== this.childrenRequestNumber) {
+        return;
+      }
+      this.childrenConfiguration = configuration;
+      field.hidden = !configuration.applicable;
+      input.disabled = !configuration.applicable;
+      input.value = this.values.childrenNo;
+      status.textContent = '';
+      if (configuration.applicable) {
+        this.setLabel('childrenNo', configuration.label);
+        input.max = configuration.maximum === null ? '' : String(configuration.maximum);
+      }
+    } catch {
+      if (requestNumber !== this.childrenRequestNumber) {
+        return;
+      }
+      status.textContent =
+        'Die Angaben zur Bundessteuer konnten nicht geladen werden. Bitte Steuerjahr oder Tarif erneut auswählen.';
+      status.dataset.state = 'error';
+    }
+    this.notifyCompletionChange();
   }
 
   private notifyCompletionChange(): void {
     const controls = [...CHOICE_FIELDS, ...AMOUNT_FIELDS].map((field) => this.getControl(field));
+    const childrenInput = this.getControl<HTMLInputElement>('childrenNo');
+    const childrenComplete =
+      this.childrenConfiguration !== undefined &&
+      (!this.childrenConfiguration.applicable ||
+        (!childrenInput.disabled && childrenInput.checkValidity()));
     const complete =
       this.form.getAttribute('aria-busy') === 'false' &&
+      childrenComplete &&
       controls.every(
         (control) => !control.disabled && control.value.trim() !== '' && control.checkValidity(),
       );
