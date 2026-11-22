@@ -30,6 +30,7 @@ describe('renderApp', () => {
     'taxScale',
     'religionP1',
     'municipality',
+    'childrenNo',
     'taxableIncome',
     'ascertainedTaxableIncome',
     'taxableAssets',

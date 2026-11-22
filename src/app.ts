@@ -150,6 +150,12 @@ export function renderApp(): string {
               ${CHOICE_FIELDS.map(renderChoiceField).join('')}
             </div>
 
+            <div id="children-no-field" class="field children-field" hidden>
+              <label for="childrenNo"></label>
+              <input id="childrenNo" name="childrenNo" type="number" inputmode="numeric" min="0" step="1" value="0" required disabled />
+              <p id="children-no-status" class="field-hint" role="status"></p>
+            </div>
+
             <fieldset>
               <legend>Einkommen</legend>
               <div class="form-grid amount-grid">

@@ -18,6 +18,7 @@ describe('lokal gespeicherte Grundangaben', () => {
       taxScale: '',
       religionP1: '',
       municipality: '',
+      childrenNo: '0',
       taxableIncome: '',
       ascertainedTaxableIncome: '',
       taxableAssets: '',

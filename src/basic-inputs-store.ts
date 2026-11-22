@@ -6,6 +6,7 @@ export interface BasicInputValues {
   taxScale: string;
   religionP1: string;
   municipality: string;
+  childrenNo: string;
   taxableIncome: string;
   ascertainedTaxableIncome: string;
   taxableAssets: string;
