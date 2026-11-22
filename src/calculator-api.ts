@@ -306,10 +306,12 @@ export function readFederalTaxCalculationResult(
   if (!isRecord(response)) {
     throw new Error('Die Antwort des Bundessteuerrechners ist ungültig.');
   }
+  const ascertained =
+    response.taxableAscertainedFederalIncome ?? response.taxableFederalIncome;
   return {
     taxableAscertainedFederalIncome: readTaxValue(
-      response.taxableFederalIncome,
-      'taxableFederalIncome',
+      ascertained,
+      'taxableAscertainedFederalIncome',
     ),
     taxableFederalIncome: readTaxValue(
       response.taxableFederalIncome,
@@ -338,29 +340,6 @@ export function federalTaxScale(taxScale: string): string {
   throw new Error(`Der Tarif ${taxScale} wird vom Bundessteuerrechner nicht unterstützt.`);
 }
 
-export function correctFederalTaxResult(
-  result: FederalTaxCalculationResult,
-  taxableIncome: number,
-): FederalTaxCalculationResult {
-  const totalFederalTax = roundedTax(
-    taxableIncome,
-    numericValue(result.federalTaxRate),
-    100,
-    0.05,
-  );
-  const deduction =
-    result.childrenDeduction === null ? 0 : numericValue(result.childrenDeduction);
-  return {
-    ...result,
-    taxableFederalIncome: correctedAmount(result.taxableFederalIncome, taxableIncome),
-    totalFederalTax: correctedAmount(result.totalFederalTax, totalFederalTax),
-    totalAfterChildrenDeduction: correctedAmount(
-      result.totalAfterChildrenDeduction,
-      Math.round((totalFederalTax - deduction) * 100) / 100,
-    ),
-  };
-}
-
 export async function calculateFederalTaxes(
   values: import('./basic-inputs-store').BasicInputValues,
 ): Promise<FederalTaxCalculationResult> {
@@ -381,16 +360,14 @@ export async function calculateFederalTaxes(
       taxYear: values.taxYear,
       taxScale: federalTaxScale(values.taxScale),
       childrenNo: values.childrenNo,
-      taxableIncome: ascertainedTaxableIncome,
+      taxableIncome,
+      ascertainedTaxableIncome,
     }),
   });
   if (!response.ok) {
     throw new Error(`Der Bundessteuerrechner antwortet mit Status ${response.status}.`);
   }
-  return correctFederalTaxResult(
-    readFederalTaxCalculationResult(await response.json()),
-    taxableIncome,
-  );
+  return readFederalTaxCalculationResult(await response.json());
 }
 
 export async function fetchCalculatorMetadata(): Promise<CalculatorMetadata> {

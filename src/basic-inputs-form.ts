@@ -159,7 +159,12 @@ export class BasicInputsForm {
       input.step = configuration.hasFractionDigits ? '0.01' : '1';
       input.max = configuration.maximum === null ? '' : String(configuration.maximum);
       input.value = this.values[field];
-      this.setHint(field, '');
+      this.setHint(
+        field,
+        field === 'federalAscertainedTaxableIncome'
+          ? 'Entspricht dem steuerbaren Einkommen für die Bundessteuer.'
+          : '',
+      );
     }
     this.updateFederalIncomeVisibility();
   }
@@ -171,9 +176,8 @@ export class BasicInputsForm {
       throw new Error('Die Eingabefelder für das Bundes-Einkommen fehlen.');
     }
     fields.hidden = !enabled;
-    for (const field of ['federalTaxableIncome', 'federalAscertainedTaxableIncome'] as const) {
-      this.getControl<HTMLInputElement>(field).disabled = !enabled;
-    }
+    this.getControl<HTMLInputElement>('federalTaxableIncome').disabled = !enabled;
+    this.getControl<HTMLInputElement>('federalAscertainedTaxableIncome').disabled = true;
   }
 
   private amountLabel(field: AmountField): string {
@@ -202,6 +206,12 @@ export class BasicInputsForm {
 
   private handleInput(field: InputField): void {
     this.values[field] = this.getControl(field).value;
+
+    if (field === 'federalTaxableIncome') {
+      this.values.federalAscertainedTaxableIncome = this.values.federalTaxableIncome;
+      this.getControl<HTMLInputElement>('federalAscertainedTaxableIncome').value =
+        this.values.federalAscertainedTaxableIncome;
+    }
 
     if (field === 'taxableIncome' || field === 'taxableAssets') {
       const { ascertained } = LINKED_AMOUNTS[field];
@@ -312,7 +322,7 @@ export class BasicInputsForm {
       this.values.useDifferentFederalIncome !== 'true' ||
       (['federalTaxableIncome', 'federalAscertainedTaxableIncome'] as const).every((field) => {
         const input = this.getControl<HTMLInputElement>(field);
-        return !input.disabled && input.value.trim() !== '' && input.checkValidity();
+        return input.value.trim() !== '' && input.checkValidity();
       });
     const complete =
       this.form.getAttribute('aria-busy') === 'false' &&

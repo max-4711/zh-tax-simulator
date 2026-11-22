@@ -7,7 +7,6 @@ import {
   calculateFederalTaxes,
   calculateTaxes,
   correctCantonalTaxResult,
-  correctFederalTaxResult,
   federalTaxScale,
   fetchCalculatorMetadata,
   fetchChildrenConfiguration,
@@ -219,7 +218,8 @@ describe('Bundessteuer', () => {
         taxYear: '2027',
         taxScale: 'MARRIED_OR_SINGLE_PARENT',
         childrenNo: '1',
-        taxableIncome: 74000,
+        taxableIncome: 73000,
+        ascertainedTaxableIncome: 74000,
       }),
     });
     fetchMock.mockRestore();
@@ -245,7 +245,8 @@ describe('Bundessteuer', () => {
       taxYear: '2027',
       taxScale: 'SINGLE',
       childrenNo: '0',
-      taxableIncome: 71000,
+      taxableIncome: 70000,
+      ascertainedTaxableIncome: 71000,
     });
     fetchMock.mockRestore();
   });
@@ -261,14 +262,18 @@ describe('Bundessteuer', () => {
     }).childrenDeduction).toBeNull();
   });
 
-  it('berechnet die Bundessteuer mit dem satzbestimmenden Satz und dem steuerbaren Einkommen', () => {
-    const corrected = correctFederalTaxResult(
-      readFederalTaxCalculationResult(federalResponse),
-      73000,
-    );
+  it('verwendet ein von der API geliefertes satzbestimmendes Einkommen unverändert', () => {
+    const ascertained = {
+      label: 'Satzbestimmendes Einkommen',
+      value: 74000,
+      currency: 'CHF',
+    };
+    const result = readFederalTaxCalculationResult({
+      ...federalResponse,
+      taxableAscertainedFederalIncome: ascertained,
+    });
 
-    expect(corrected.totalFederalTax.value).toBe(737.3);
-    expect(corrected.totalAfterChildrenDeduction.value).toBe(473.3);
-    expect(corrected.taxableFederalIncome.value).toBe(73000);
+    expect(result.taxableAscertainedFederalIncome).toEqual(ascertained);
+    expect(result.totalAfterChildrenDeduction.value).toBe(474);
   });
 });

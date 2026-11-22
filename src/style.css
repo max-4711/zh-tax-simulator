@@ -777,10 +777,6 @@ dl {
   font-weight: 600;
 }
 
-.app-content:has(.comparison-page:not([hidden])) {
-  width: min(1120px, calc(100% - 40px));
-}
-
 .comparison-inputs {
   margin-top: 32px;
 }
